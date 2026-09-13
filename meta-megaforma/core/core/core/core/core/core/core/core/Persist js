@@ -1,0 +1,103 @@
+/**
+ * ============================================================
+ * HYDRA PSIE — PERSISTENȚĂ LOCALĂ
+ * ============================================================
+ * Salvează starea în localStorage. Restaurează la reload.
+ * Nu aruncă niciodată erori.
+ */
+
+import { CONFIG } from './config.js';
+import { Log } from './log.js';
+
+/**
+ * Persistență cu fallback graceful
+ */
+export class PersistenceManager {
+  constructor(key = CONFIG.PERSIST_KEY) {
+    this.key = key;
+    this.lastSave = 0;
+  }
+
+  /**
+   * Salvează starea (cu limitare pentru localStorage)
+   */
+  save(brain) {
+    try {
+      const data = brain.serialize();
+      const serialized = JSON.stringify(data);
+
+      // Verifică dimensiunea (localStorage limit ~5MB)
+      if (serialized.length > 4_500_000) {
+        Log.add('warn', 'Starea e prea mare pentru localStorage. Truncare.');
+        data.compost.entries = data.compost.entries.slice(-50);
+        data.compost.compost = data.compost.compost.slice(-30);
+      }
+
+      localStorage.setItem(this.key, JSON.stringify(data));
+      this.lastSave = Date.now();
+      return true;
+    } catch (e) {
+      Log.add('warn', `Persistență eșuată: ${e.message}`);
+      return false;
+    }
+  }
+
+  /**
+   * Salvare throttled (max o dată la N ms)
+   */
+  saveThrottled(brain, minIntervalMs = CONFIG.PERSIST_INTERVAL_MS) {
+    const now = Date.now();
+    if (now - this.lastSave < minIntervalMs) return false;
+    return this.save(brain);
+  }
+
+  /**
+   * Restaurează starea
+   */
+  restore(brain) {
+    try {
+      const raw = localStorage.getItem(this.key);
+      if (!raw) return false;
+
+      const data = JSON.parse(raw);
+      brain.deserialize(data);
+
+      Log.add('ok', `Stare restaurată (sesiune: ${new Date(brain.session).toLocaleString('ro-RO')})`);
+      return true;
+    } catch (e) {
+      Log.add('warn', `Restaurare eșuată: ${e.message}`);
+      return false;
+    }
+  }
+
+  /**
+   * Curăță starea
+   */
+  clear() {
+    try {
+      localStorage.removeItem(this.key);
+      Log.add('info', 'Stare locală ștearsă.');
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /**
+   * Verifică dacă există stare salvată
+   */
+  exists() {
+    return localStorage.getItem(this.key) !== null;
+  }
+
+  /**
+   * Dimensiunea stării în bytes
+   */
+  size() {
+    const raw = localStorage.getItem(this.key);
+    return raw ? raw.length : 0;
+  }
+}
+
+// Instanță globală
+export const Persistence = new PersistenceManager();
