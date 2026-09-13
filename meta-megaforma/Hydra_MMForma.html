@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hydra Meta-Megaforma</title>
+<meta name="theme-color" content="#22d3ee">
+<link rel="manifest" href="./manifest.json">
+
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #09090b;
+  --bg-soft: #101014;
+  --bg-card: #18181b;
+  --border: #27272a;
+  --text: #fafafa;
+  --text-dim: #a1a1aa;
+  --text-muted: #71717a;
+  --cyan: #22d3ee;
+  --violet: #a78bfa;
+  --green: #4ade80;
+  --yellow: #facc15;
+  --red: #f87171;
+  --orange: #fb923c;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  padding: 1.25rem .85rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  min-height: 100vh;
+  font-size: 14px;
+}
+h1 {
+  font-size: 1.4rem;
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: .2rem;
+}
+.sub { color: var(--text-dim); font-size: .82rem; margin-bottom: 1rem; }
+
+.status-bar {
+  display: flex; gap: .4rem; flex-wrap: wrap;
+  margin-bottom: 1.25rem; font-size: .72rem;
+}
+.badge {
+  padding: .3rem .6rem;
+  border-radius: .35rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  display: inline-flex; align-items: center; gap: .3rem;
+}
+.badge.live { border-color: var(--green); color: var(--green); }
+.badge.sync { border-color: var(--cyan); color: var(--cyan); }
+.badge.warn { border-color: var(--yellow); color: var(--yellow); }
+.badge.err { border-color: var(--red); color: var(--red); }
+.badge.self { border-color: var(--violet); color: var(--violet); }
+
+.dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: currentColor;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: .55rem;
+  margin-bottom: 1.25rem;
+}
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: .55rem;
+  padding: .7rem .8rem;
+}
+.card-label {
+  color: var(--text-dim);
+  font-size: .65rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: .28rem;
+}
+.card-value {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--cyan);
+  font-variant-numeric: tabular-nums;
+}
+.card-unit {
+  font-size: .65rem;
+  color: var(--text-muted);
+  margin-left: .2rem;
+}
+.card-bar {
+  height: 3px;
+  background: var(--bg-soft);
+  border-radius: 2px;
+  margin-top: .4rem;
+  overflow: hidden;
+}
+.card-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+  transition: width .4s ease;
+}
+
+section { margin-bottom: 1.5rem; }
+h2 {
+  font-size: .92rem;
+  color: var(--cyan);
+  margin-bottom: .55rem;
+  display: flex; align-items: center; gap: .4rem;
+}
+h2::before {
+  content: '';
+  width: 3px; height: .85rem;
+  background: linear-gradient(180deg, var(--cyan), var(--violet));
+  border-radius: 2px;
+}
+
+.nodes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: .5rem;
+}
+.node {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: .5rem;
+  padding: .6rem .75rem;
+  font-size: .75rem;
+  transition: all .3s;
+  position: relative;
+}
+.node.online { border-color: var(--green); }
+.node.self { border-color: var(--violet); }
+.node.self::after {
+  content: '◄ ACEST NOD';
+  position: absolute;
+  top: .5rem; right: .5rem;
+  font-size: .55rem;
+  color: var(--violet);
+}
+.node .n-domain {
+  color: var(--cyan);
+  font-weight: 600;
+  margin-bottom: .2rem;
+  word-break: break-all;
+}
+.node .n-meta {
+  color: var(--text-muted);
+  font-size: .68rem;
+  display: flex; justify-content: space-between;
+  margin-bottom: .15rem;
+}
+.node .n-status {
+  color: var(--text-dim);
+  font-size: .65rem;
+  margin-top: .3rem;
+  font-style: italic;
+}
+
+.perspectives {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: .35rem;
+}
+.perspective {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: .35rem;
+  padding: .3rem .5rem;
+  font-size: .68rem;
+  display: flex; justify-content: space-between;
+}
+.perspective .p-gamma { color: var(--cyan); font-weight: 600; }
+.perspective.high .p-gamma { color: var(--green); }
+.perspective.low .p-gamma { color: var(--yellow); }
+.perspective.critical .p-gamma { color: var(--red); }
+
+.organs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+  gap: .3rem;
+}
+.organ {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: .3rem;
+  padding: .3rem;
+  font-size: .6rem;
+  text-align: center;
+  transition: all .3s;
+}
+.organ.active { border-color: var(--green); color: var(--green); }
+.organ.idle { border-color: var(--yellow); color: var(--yellow); }
+.organ.sleep { border-color: var(--text-muted); color: var(--text-muted); }
+
+#log {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: .5rem;
+  padding: .6rem;
+  font-family: ui-monospace, monospace;
+  font-size: .68rem;
+  color: var(--text-dim);
+  max-height: 200px;
+  overflow-y: auto;
+  line-height: 1.4;
+}
+#log .line { padding: .05rem 0; }
+#log .ts { color: var(--text-muted); margin-right: .4rem; }
+#log .ok { color: var(--green); }
+#log .info { color: var(--cyan); }
+#log .warn { color: var(--yellow); }
+#log .err { color: var(--red); }
+#log .pathfinder { color: var(--violet); }
+#log .sync { color: var(--violet); }
+
+.btn {
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+  color: #09090b; border: none; border-radius: .4rem;
+  padding: .5rem .9rem; font-weight: 600; font-size: .75rem;
+  cursor: pointer; transition: opacity .2s;
+}
+.btn:hover { opacity: .85; }
+.btn.secondary {
+  background: var(--bg-card);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn.danger {
+  background: var(--bg-card);
+  color: var(--red);
+  border: 1px solid var(--red);
+}
+.btn-row {
+  margin-top: .65rem;
+  display: flex; gap: .4rem; flex-wrap: wrap;
+}
+
+.chart-container {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: .5rem;
+  padding: .4rem;
+  height: 100px;
+}
+#throughput-chart {
+  width: 100%; height: 100%; display: block;
+}
+
+.qa {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: .45rem;
+  padding: .7rem .85rem;
+  margin-bottom: .5rem;
+  font-size: .82rem;
+}
+.qa b { color: var(--violet); }
+
+footer {
+  border-top: 1px solid var(--border);
+  padding-top: .75rem;
+  margin-top: 1.5rem;
+  color: var(--text-muted);
+  font-size: .68rem;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+
+<h1>Hydra Meta-Megaforma</h1>
+<p class="sub" id="subtitle">Se detectează domeniul... · sincronizare rețea · coordonare topologică</p>
+
+<div class="status-bar">
+  <span class="badge live"><span class="dot"></span> Nod activ</span>
+  <span class="badge self" id="node-badge">Nod: <span id="node-domain">?</span></span>
+  <span class="badge sync" id="network-badge">Rețea: <span id="network-count">0</span> noduri</span>
+  <span class="badge" id="mode-badge">Mod: <span id="mode-val">standalone</span></span>
+  <span class="badge sync" id="sdi-badge">SDI: <span id="sdi-val">—</span></span>
+</div>
+
+<div class="grid">
+  <div class="card"><div class="card-label">Memorie cache</div><div class="card-value"><span id="mem-used">0.000</span><span class="card-unit">MB</span></div><div class="card-bar"><div class="card-bar-fill" id="mem-bar"></div></div></div>
+  <div class="card"><div class="card-label">Throughput</div><div class="card-value"><span id="throughput">0.000</span><span class="card-unit">GB/s</span></div><div class="card-bar"><div class="card-bar-fill" id="thr-bar"></div></div></div>
+  <div class="card"><div class="card-label">γ (coerență)</div><div class="card-value"><span id="gamma">0.000</span></div><div class="card-bar"><div class="card-bar-fill" id="gamma-bar"></div></div></div>
+  <div class="card"><div class="card-label">Ω_max</div><div class="card-value"><span id="omega-max">0.000</span></div><div class="card-bar"><div class="card-bar-fill" id="omega-bar"></div></div></div>
+  <div class="card"><div class="card-label">A (asumare)</div><div class="card-value"><span id="asumare">0.000</span></div><div class="card-bar"><div class="card-bar-fill" id="asumare-bar"></div></div></div>
+  <div class="card"><div class="card-label">K(t)</div><div class="card-value"><span id="k-val">0.000</span></div><div class="card-bar"><div class="card-bar-fill" id="k-bar"></div></div></div>
+  <div class="card"><div class="card-label">γ_div</div><div class="card-value"><span id="gamma-div">0.000</span></div><div class="card-bar"><div class="card-bar-fill" id="gdiv-bar"></div></div></div>
+  <div class="card"><div class="card-label">S_Ω</div><div class="card-value"><span id="s-omega">0.000</span></div><div class="card-bar"><div class="card-bar-fill" id="somega-bar"></div></div></div>
+  <div class="card"><div class="card-label">D_roi (topologic)</div><div class="card-value"><span id="droi-val">0.000</span></div><div class="card-bar"><div class="card-bar-fill" id="droi-bar"></div></div></div>
+  <div class="card"><div class="card-label">Sincronizări</div><div class="card-value"><span id="sync-count">0</span></div><div class="card-bar"><div class="card-bar-fill" id="sync-bar"></div></div></div>
+</div>
+
+<section>
+  <h2>Throughput live</h2>
+  <div class="chart-container"><canvas id="throughput-chart"></canvas></div>
+</section>
+
+<section>
+  <h2>Rețea Meta-Megaformă (<span id="node-count">0</span> noduri detectate)</h2>
+  <div class="nodes" id="nodes-grid"></div>
+</section>
+
+<section>
+  <h2>Spectrul celor 20 perspective (A4)</h2>
+  <div class="perspectives" id="perspectives-grid"></div>
+</section>
+
+<section>
+  <h2>Organe active (<span id="organ-count">0</span>)</h2>
+  <div class="organs" id="organs-grid"></div>
+</section>
+
+<section>
+  <h2>Log rețea</h2>
+  <div id="log"></div>
+  <div class="btn-row">
+    <button class="btn" id="btn-pulse">Emitere puls</button>
+    <button class="btn secondary" id="btn-scan">Scanare context</button>
+    <button class="btn secondary" id="btn-sync">Sincronizează rețea</button>
+    <button class="btn secondary" id="btn-export">Export stare</button>
+    <button class="btn danger" id="btn-reset">Reset local</button>
+  </div>
+</section>
+
+<section>
+  <h2>Principiu</h2>
+  <div class="qa"><b>Ce este Meta-Megaforma?</b> Rețeaua tuturor nodurilor Hydra. Fiecare domeniu este un nod. Toate comunică prin WebSocket. Coordonare topologică prin D_roi.</div>
+  <div class="qa"><b>Cum funcționează fără server central?</b> Fiecare nod are propriul creier PSIE. Sincronizarea este peer-to-peer prin relay public. Niciun nod nu depinde de altul.</div>
+  <div class="qa"><b>Ce se întâmplă când vin mai multe noduri?</b> D_roi crește. C_core se lărgește. Apar perspective noi. Meta-Megaforma evoluează organic.</div>
+</section>
+
+<footer>
+  <span id="last-update">—</span> · PSIE v4.0 · CC0 1.0 · DOI: 10.6084/m9.figshare.32389911
+</footer>
+
+<script type="module">
+// ============================================================
+// HYDRA META-MEGAFORMA — SCRIPT UNIFICAT
+// ============================================================
+
+// === 1. DETECTARE DOMENIU ===
+const KNOWN_DOMAINS = [
+  'hidra-smart-core.com',
+  'hidra-psie.living-the.life',
+  'hidra-psie.is-a-fullstack.dev',
+  'hidra-psie.localplayer.dev'
+];
+
+const currentDomain = window.location.hostname;
+const isKnownDomain = KNOWN_DOMAINS.some(d => currentDomain.includes(d.replace('https://', '').replace('http://', '')));
+const selfNodeId = currentDomain || 'localhost';
+
+document.getElementById('node-domain').textContent = selfNodeId;
+document.getElementById('subtitle').textContent = `Nod: ${selfNodeId} · sincronizare rețea · coordonare topologică`;
+
+// === 2. CONFIG ===
+const CONFIG = {
+  MEMORY_CACHE_GB: 250,
+  THROUGHPUT_MAX_GB_S: 4,
+  N_ORGANS: 38,
+  N_PERSPECTIVES: 20,
+  K_ZERO: 1.0,
+  ALPHA: 0.15,
+  OMEGA_MAX_BASE: 1.0,
+  EPHEMERAL_TTL_MS: 10 * 60 * 1000,
+  COMPOST_TTL_MS: 72 * 60 * 60 * 1000,
+  SYNC_INTERVAL_MS: 5000,
+  PERSIST_KEY: `hydra_node_${selfNodeId}`,
+  NETWORK_REGISTRY_KEY: 'hydra_network_registry',
+  // Endpoints cunoscute ale rețelei (fiecare nod își anunță existența)
+  NETWORK_ENDPOINTS: [
+    'https://hidra-smart-core.com',
+    'https://hidra-psie.living-the.life',
+    'https://hidra-psie.is-a-fullstack.dev',
+    'https://hidra-psie.localplayer.dev'
+  ],
+  PERSPECTIVE_NAMES: [
+    'evident', 'consensual', 'main-stream', 'research',
+    'detaliu_contextual', 'influență_indirectă', 'ipoteză_alternativă',
+    'marginal', 'contra_narativ', 'conspirativ',
+    'speculativ', 'bârfă', 'zvon', 'legendar',
+    'absurd', 'imposibil_aparent', 'paradoxal',
+    'inconștient_colectiv', 'sincronicitate', 'total_opus'
+  ]
+};
+
+// === 3. STARE NOD ===
+const Node = {
+  session: Date.now(),
+  nodeId: selfNodeId,
+  isKnownDomain,
+  metrics: {
+    gamma: 0.95, lastGamma: 0.95, omega: 0, omegaMax: 1.0,
+    asumare: 1.0, sdi: 0.0, k: 0.95,
+    gammaDiv: 0.0, sOmega: 0.0, droi: 0.5, gardaOk: true
+  },
+  perspectives: CONFIG.PERSPECTIVE_NAMES.map((name, i) => ({
+    id: i, name, gamma: 0.5 + Math.random() * 0.5
+  })),
+  organs: new Array(CONFIG.N_ORGANS).fill(0).map((_, i) => ({
+    id: i + 1, name: `Organ ${i + 1}`,
+    status: 'active', lastPulse: Date.now()
+  })),
+  cCore: new Set(),
+  cache: new Map(),
+  cacheUsedGB: 0,
+  compost: new Map(),
+  throughput: { currentGBs: 0, history: new Array(60).fill(0) },
+  network: new Map(),   // id -> { domain, lastSeen, gamma, sdi, asumare }
+  syncCount: 0,
+  log: []
+};
+
+// === 4. LOG ===
+function log(level, message) {
+  const entry = {
+    ts: new Date().toLocaleTimeString('ro-RO'),
+    level,
+    message
+  };
+  Node.log.push(entry);
+  if (Node.log.length > 200) Node.log.shift();
+  renderLog();
+}
+
+// === 5. FORMULE PSIE ===
+function computeGammaDiv() {
+  const gammas = Node.perspectives.map(p => p.gamma);
+  const n = gammas.length;
+  if (n < 2) return 0;
+  const mean = gammas.reduce((a, b) => a + b, 0) / n;
+  const variance = gammas.reduce((a, g) => a + (g - mean) ** 2, 0) / n;
+  return Math.min(1, Math.max(0, 4 * variance));
+}
+
+function computeSOmega() {
+  const sizes = [...Node.cache.values()].map(e => e.sizeGB + 1e-12);
+  if (sizes.length < 2) return 0;
+  const total = sizes.reduce((a, b) => a + b, 0);
+  if (total <= 0) return 0;
+  const probs = sizes.map(s => s / total).filter(p => p > 0);
+  if (probs.length < 2) return 0;
+  const H = -probs.reduce((acc, p) => acc + p * Math.log(p), 0);
+  return Math.min(1, Math.max(0, H / Math.log(probs.length)));
+}
+
+function computeOmegaMax() {
+  const C = 1.0 + Node.cCore.size / 100;
+  const { sdi, sOmega, gammaDiv } = Node.metrics;
+  const denom = (1 + sdi) * (1 + sOmega) * (1 + gammaDiv);
+  if (denom <= 0) return 0;
+  return CONFIG.OMEGA_MAX_BASE * C / denom;
+}
+
+function computeK() {
+  const C = 1 + Node.cCore.size / 50;
+  return CONFIG.K_ZERO * (1 - Math.exp(-CONFIG.ALPHA * C));
+}
+
+function computeDroi() {
+  const allNodes = [
+    { gamma: Node.metrics.gamma, sdi: Node.metrics.sdi, asumare: Node.metrics.asumare },
+    ...[...Node.network.values()].map(n => ({
+      gamma: n.gamma || 0.9,
+      sdi: n.sdi || 0.1,
+      asumare: n.asumare || 0.9
+    }))
+  ];
+  if (!allNodes.length) return 0.5;
+  let num = 0, den = 0;
+  for (const n of allNodes) {
+    const w = n.asumare * (1 - n.sdi);
+    num += w * n.gamma;
+    den += w;
+  }
+  return den > 0 ? num / den : 0.5;
+}
+
+function computeGlobalSDI() {
+  const allNodes = [
+    { sdi: Node.metrics.sdi },
+    ...[...Node.network.values()].map(n => ({ sdi: n.sdi || 0.1 }))
+  ];
+  const meanSDI = allNodes.reduce((s, a) => s + a.sdi, 0) / allNodes.length;
+  const cCoreFactor = Math.min(1, Node.cCore.size / CONFIG.N_PERSPECTIVES);
+  return Math.min(1, Math.max(0, meanSDI * (1 - 0.35 * cCoreFactor)));
+}
+
+function computeAssumption() {
+  const allNodes = [
+    { gamma: Node.metrics.gamma },
+    ...[...Node.network.values()].map(n => ({ gamma: n.gamma || 0.9 }))
+  ];
+  const J = allNodes.reduce((s, a) => s + a.gamma, 0) / allNodes.length;
+  return J / (J + Node.metrics.sdi + 1e-9);
+}
+
+function computeOmega() {
+  const delta = Math.abs(Node.metrics.gamma - Node.metrics.lastGamma);
+  return Math.min(1.5, delta + Node.metrics.gammaDiv * 0.35);
+}
+
+// === 6. PULS ===
+function pulse() {
+  // Organe
+  for (const organ of Node.organs) {
+    const r = Math.random();
+    if (r < 0.03) organ.status = 'sleep';
+    else if (r < 0.14) organ.status = 'idle';
+    else organ.status = 'active';
+    organ.lastPulse = Date.now();
+  }
+
+  // Perspective
+  Node.perspectives.forEach((p, i) => {
+    const wave = Math.sin((Date.now() / 2200) + i * 0.7);
+    const drift = (wave + 1) * 0.05;
+    const noise = (Math.random() - 0.5) * 0.02;
+    p.gamma = Math.min(0.999, Math.max(0.001, 0.66 + drift + noise));
+  });
+
+  // Metrici
+  Node.metrics.lastGamma = Node.metrics.gamma;
+  Node.metrics.gammaDiv = computeGammaDiv();
+  Node.metrics.sOmega = computeSOmega();
+  Node.metrics.sdi = computeGlobalSDI();
+  Node.metrics.omegaMax = computeOmegaMax();
+  Node.metrics.k = computeK();
+  Node.metrics.asumare = computeAssumption();
+  Node.metrics.droi = computeDroi();
+
+  // C_core
+  Node.cCore = new Set();
+  Node.perspectives.forEach(p => {
+    if (p.gamma >= 0.75) Node.cCore.add(`perspective:${p.name}`);
+  });
+
+  Node.metrics.gamma = Math.min(0.999, Math.max(0.001,
+    0.65 * Node.metrics.gamma +
+    0.25 * Node.metrics.droi +
+    0.10 * (1 - Node.metrics.sdi)
+  ));
+
+  Node.metrics.omega = computeOmega();
+  Node.metrics.gardaOk = Node.metrics.omega <= Node.metrics.omegaMax;
+
+  // Compost expired
+  recycleExpired();
+
+  // Persist
+  persist();
+}
+
+// === 7. CACHE + COMPOST ===
+function cacheEntry(id, data, gamma = 0.5, epsilon = 1e-3, resolution = 'default') {
+  let sizeGB = 0;
+  try {
+    sizeGB = new Blob([JSON.stringify(data)]).size / (1024 ** 3);
+  } catch (e) {
+    sizeGB = JSON.stringify(data).length / (1024 ** 3);
+  }
+  if (sizeGB <= 0) sizeGB = 1e-9;
+
+  if (Node.cacheUsedGB + sizeGB > CONFIG.MEMORY_CACHE_GB) {
+    recycleOldest(sizeGB);
+  }
+
+  const existing = Node.cache.get(id);
+  if (existing) Node.cacheUsedGB -= existing.sizeGB;
+
+  Node.cache.set(id, {
+    data, gamma, epsilon, resolution,
+    ts: Date.now(), lastUse: Date.now(), sizeGB
+  });
+  Node.cacheUsedGB = Math.max(0, Node.cacheUsedGB + sizeGB);
+  return sizeGB;
+}
+
+function recycleOldest(neededGB) {
+  const sorted = [...Node.cache.entries()].sort((a, b) => a[1].lastUse - b[1].lastUse);
+  let freed = 0;
+  for (const [id, entry] of sorted) {
+    if (freed >= neededGB) break;
+    addToCompost(id, entry.data);
+    Node.cache.delete(id);
+    Node.cacheUsedGB -= entry.sizeGB;
+    freed += entry.sizeGB;
+  }
+}
+
+function addToCompost(id, data) {
+  Node.compost.set(id, {
+    pattern: {
+      hash: simpleHash(JSON.stringify(data)),
+      keys: Object.keys(data || {}).slice(0, 5)
+    },
+    ts: Date.now()
+  });
+}
+
+function recycleExpired() {
+  const now = Date.now();
+  let recycled = 0;
+  for (const [id, entry] of [...Node.cache.entries()]) {
+    if (now - entry.lastUse > CONFIG.EPHEMERAL_TTL_MS) {
+      addToCompost(id, entry.data);
+      Node.cache.delete(id);
+      Node.cacheUsedGB -= entry.sizeGB;
+      recycled++;
+    }
+  }
+  if (recycled > 0) log('warn', `Fabrica efemeră: ${recycled} intrări → Compost`);
+}
+
+function simpleHash(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h).toString(36).slice(0, 8);
+}
+
+// === 8. SINCronizare REȚEA (Peer-to-Peer prin CORS + JSON) ===
+async function syncNetwork() {
+  log('sync', `Sincronizare rețea (${CONFIG.NETWORK_ENDPOINTS.length} endpoint-uri)...`);
+
+  const promises = CONFIG.NETWORK_ENDPOINTS.map(async (endpoint) => {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3000);
+
+      const res = await fetch(`${endpoint}/state.json`, {
+        signal: controller.signal,
+        mode: 'cors',
+        cache: 'no-cache'
+      });
+      clearTimeout(timeout);
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
+      return { endpoint, data, ok: true };
+    } catch (e) {
+      return { endpoint, error: e.message, ok: false };
+    }
+  });
+
+  const results = await Promise.all(promises);
+
+  // Actualizează rețeaua
+  const seenDomains = new Set();
+  for (const r of results) {
+    const domain = new URL(r.endpoint).hostname;
+    seenDomains.add(domain);
+
+    if (r.ok && r.data) {
+      Node.network.set(domain, {
+        domain,
+        lastSeen: Date.now(),
+        gamma: r.data.metrics?.gamma || 0.9,
+        sdi: r.data.metrics?.sdi || 0.1,
+        asumare: r.data.metrics?.asumare || 0.9,
+        perspectives: r.data.perspectives?.length || 20,
+        organs: r.data.organs?.length || 38
+      });
+      log('sync', `✓ ${domain} răspuns (γ=${(r.data.metrics?.gamma || 0.9).toFixed(3)})`);
+    } else {
+      // Nod offline dar îl păstrăm în rețea (poate reveni)
+      if (!Node.network.has(domain)) {
+        Node.network.set(domain, {
+          domain,
+          lastSeen: Date.now(),
+          gamma: 0.5,
+          sdi: 0.5,
+          asumare: 0.5,
+          offline: true
+        });
+      }
+      log('info', `⊘ ${domain} offline (${r.error || 'unknown'})`);
+    }
+  }
+
+  // Include propriul nod
+  Node.network.set(selfNodeId, {
+    domain: selfNodeId,
+    lastSeen: Date.now(),
+    gamma: Node.metrics.gamma,
+    sdi: Node.metrics.sdi,
+    asumare: Node.metrics.asumare,
+    self: true
+  });
+
+  Node.syncCount++;
+  log('ok', `Rețea sincronizată: ${Node.network.size} noduri cunoscute`);
+
+  renderNodes();
+  persist();
+}
+
+// === 9. PERSIST ===
+function persist() {
+  try {
+    const data = {
+      nodeId: selfNodeId,
+      session: Node.session,
+      metrics: Node.metrics,
+      syncCount: Node.syncCount,
+      ts: Date.now()
+    };
+    localStorage.setItem(CONFIG.PERSIST_KEY, JSON.stringify(data));
+
+    // Publică starea pentru celelalte noduri
+    localStorage.setItem('hydra_state_' + selfNodeId, JSON.stringify({
+      metrics: Node.metrics,
+      perspectives: Node.perspectives,
+      organs: Node.organs,
+      ts: Date.now()
+    }));
+  } catch (e) { /* silent */ }
+}
+
+function restore() {
+  try {
+    const raw = localStorage.getItem(CONFIG.PERSIST_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (data.metrics) Object.assign(Node.metrics, data.metrics);
+    if (data.syncCount) Node.syncCount = data.syncCount;
+    if (data.session) Node.session = data.session;
+    log('ok', 'Stare locală restaurată');
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// === 10. RENDER UI ===
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+function setWidth(id, pct) {
+  const el = document.getElementById(id);
+  if (el) el.style.width = Math.max(0, Math.min(100, pct)) + '%';
+}
+
+function renderMetrics() {
+  setText('mem-used', (Node.cacheUsedGB * 1024).toFixed(3));
+  setWidth('mem-bar', (Node.cacheUsedGB / CONFIG.MEMORY_CACHE_GB) * 100);
+
+  setText('throughput', Node.throughput.currentGBs.toFixed(3));
+  setWidth('thr-bar', (Node.throughput.currentGBs / CONFIG.THROUGHPUT_MAX_GB_S) * 100);
+
+  setText('gamma', Node.metrics.gamma.toFixed(3));
+  setWidth('gamma-bar', Node.metrics.gamma * 100);
+
+  setText('omega-max', Node.metrics.omegaMax.toFixed(3));
+  setWidth('omega-bar', Node.metrics.omegaMax * 100);
+
+  setText('asumare', Node.metrics.asumare.toFixed(3));
+  setWidth('asumare-bar', Node.metrics.asumare * 100);
+
+  setText('k-val', Node.metrics.k.toFixed(3));
+  setWidth('k-bar', Node.metrics.k * 100);
+
+  setText('gamma-div', Node.metrics.gammaDiv.toFixed(3));
+  setWidth('gdiv-bar', Node.metrics.gammaDiv * 100);
+
+  setText('s-omega', Node.metrics.sOmega.toFixed(3));
+  setWidth('somega-bar', Node.metrics.sOmega * 100);
+
+  setText('droi-val', Node.metrics.droi.toFixed(3));
+  setWidth('droi-bar', Node.metrics.droi * 100);
+
+  setText('sync-count', Node.syncCount);
+  setWidth('sync-bar', Math.min(100, Node.syncCount * 10));
+
+  setText('network-count', Node.network.size);
+  setText('node-count', Node.network.size);
+  setText('sdi-val', Node.metrics.sdi.toFixed(3));
+
+  const mode = isKnownDomain ? 'meta-megaforma' : 'standalone';
+  setText('mode-val', mode);
+
+  setText('last-update', new Date().toLocaleString('ro-RO'));
+
+  const sdiBadge = document.getElementById('sdi-badge');
+  sdiBadge.classList.remove('live', 'sync', 'warn', 'err');
+  if (Node.metrics.sdi >= 0.70) sdiBadge.classList.add('err');
+  else if (Node.metrics.sdi >= 0.30) sdiBadge.classList.add('warn');
+  else sdiBadge.classList.add('live');
+}
+
+function renderNodes() {
+  const grid = document.getElementById('nodes-grid');
+  if (!grid) return;
+
+  const nodes = [...Node.network.values()].sort((a, b) => {
+    if (a.self) return -1;
+    if (b.self) return 1;
+    return (b.lastSeen || 0) - (a.lastSeen || 0);
+  });
+
+  grid.innerHTML = nodes.map(n => {
+    const classes = ['node'];
+    if (!n.offline) classes.push('online');
+    if (n.self) classes.push('self');
+
+    const lastSeen = n.self ? 'acum' : (n.offline ? 'offline' : timeAgo(n.lastSeen));
+
+    return `
+      <div class="${classes.join(' ')}">
+        <div class="n-domain">${escapeHTML(n.domain)}</div>
+        <div class="n-meta"><span>γ ${(n.gamma || 0).toFixed(3)}</span><span>A ${(n.asumare || 0).toFixed(2)}</span></div>
+        <div class="n-meta"><span>SDI ${(n.sdi || 0).toFixed(3)}</span><span>${lastSeen}</span></div>
+        <div class="n-status">${n.self ? 'nod local' : (n.offline ? 'aștept conectare' : 'activ în rețea')}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderPerspectives() {
+  const grid = document.getElementById('perspectives-grid');
+  if (!grid) return;
+  grid.innerHTML = Node.perspectives.map(p => {
+    let cls = 'high';
+    if (p.gamma < 0.30) cls = 'critical';
+    else if (p.gamma < 0.60) cls = 'low';
+    return `<div class="perspective ${cls}">
+      <span>${escapeHTML(p.name)}</span>
+      <span class="p-gamma">${p.gamma.toFixed(2)}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderOrgans() {
+  const grid = document.getElementById('organs-grid');
+  if (!grid) return;
+  grid.innerHTML = Node.organs.map(o =>
+    `<div class="organ ${o.status}">${escapeHTML(o.name)}</div>`
+  ).join('');
+  setText('organ-count', Node.organs.length);
+}
+
+function renderLog() {
+  const logEl = document.getElementById('log');
+  if (!logEl) return;
+  logEl.innerHTML = Node.log.slice(-40).map(e =>
+    `<div class="line"><span class="ts">${e.ts}</span><span class="${e.level}">${escapeHTML(e.message)}</span></div>`
+  ).join('');
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function escapeHTML(str) {
+  if (str == null) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function timeAgo(ts) {
+  if (!ts) return '—';
+  const diff = Date.now() - ts;
+  const sec = Math.floor(diff / 1000);
+  if (sec < 60) return `${sec}s`;
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min}m`;
+  return `${Math.floor(min / 60)}h`;
+}
+
+// === 11. CHART ===
+const chart = { canvas: null, ctx: null, w: 0, h: 0 };
+
+function initChart() {
+  chart.canvas = document.getElementById('throughput-chart');
+  if (!chart.canvas) return;
+  chart.ctx = chart.canvas.getContext('2d');
+  resizeChart();
+  window.addEventListener('resize', resizeChart);
+}
+
+function resizeChart() {
+  if (!chart.canvas) return;
+  const rect = chart.canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  chart.canvas.width = rect.width * dpr;
+  chart.canvas.height = rect.height * dpr;
+  chart.ctx.setTransform(1, 0, 0, 1, 0, 0);
+  chart.ctx.scale(dpr, dpr);
+  chart.w = rect.width;
+  chart.h = rect.height;
+}
+
+function drawChart() {
+  if (!chart.ctx || chart.w <= 0) return;
+  const { ctx, w, h } = chart;
+  ctx.clearRect(0, 0, w, h);
+
+  const data = Node.throughput.history;
+  const max = Math.max(...data, CONFIG.THROUGHPUT_MAX_GB_S, 0.001);
+
+  ctx.strokeStyle = '#27272a';
+  ctx.lineWidth = 1;
+  for (let i = 1; i < 4; i++) {
+    const y = (h / 4) * i;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(w, y);
+    ctx.stroke();
+  }
+
+  const step = w / Math.max(1, data.length - 1);
+  ctx.strokeStyle = '#22d3ee';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  data.forEach((v, i) => {
+    const x = i * step;
+    const y = h - (v / max) * h;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, 'rgba(34, 211, 238, 0.25)');
+  grad.addColorStop(1, 'rgba(34, 211, 238, 0)');
+  ctx.lineTo(w, h);
+  ctx.lineTo(0, h);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+}
+
+// === 12. SCAN CONTEXT ===
+function scanContext() {
+  const selected = [...Node.perspectives].sort((a, b) => b.gamma - a.gamma).slice(0, 5);
+  const context = {
+    id: `ctx_${Date.now()}`,
+    node: selfNodeId,
+    perspectives: selected.map(p => ({ name: p.name, gamma: p.gamma })),
+    ts: new Date().toISOString()
+  };
+
+  const sizeGB = cacheEntry(context.id, context, 0.9, 1e-3, 'scan');
+
+  Node.throughput.currentGBs = 0.05 + selected.length * 0.07 + Math.random() * 0.2;
+  Node.throughput.history.push(Node.throughput.currentGBs);
+  if (Node.throughput.history.length > 60) Node.throughput.history.shift();
+
+  selected.forEach(p => Node.cCore.add(`scan:${p.name}`));
+  log('ok', `Scan: ${selected.length} perspective · ${(sizeGB * 1024).toFixed(3)} MB`);
+}
+
+// === 13. BUTOANE ===
+function setupButtons() {
+  document.getElementById('btn-pulse').onclick = () => {
+    pulse();
+    log('ok', 'Puls manual');
+    renderAll();
+  };
+
+  document.getElementById('btn-scan').onclick = () => {
+    scanContext();
+    renderAll();
+  };
+
+  document.getElementById('btn-sync').onclick = async () => {
+    await syncNetwork();
+    renderAll();
+  };
+
+  document.getElementById('btn-export').onclick = () => {
+    const data = {
+      node: selfNodeId,
+      metrics: Node.metrics,
+      perspectives: Node.perspectives,
+      organs: Node.organs,
+      network: [...Node.network.values()],
+      syncCount: Node.syncCount,
+      exportTs: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `hydra_state_${selfNodeId}_${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    log('ok', 'Stare exportată');
+  };
+
+  document.getElementById('btn-reset').onclick = () => {
+    if (confirm('Reset stare locală?')) {
+      localStorage.removeItem(CONFIG.PERSIST_KEY);
+      location.reload();
+    }
+  };
+}
+
+// === 14. RENDER ALL ===
+function renderAll() {
+  renderMetrics();
+  renderNodes();
+  renderPerspectives();
+  renderOrgans();
+  renderLog();
+  drawChart();
+}
+
+// === 15. LOOP ===
+function loop() {
+  pulse();
+  renderAll();
+}
+
+// === 16. INIT ===
+async function init() {
+  log('ok', `🧠 Nod Hydra pornit: ${selfNodeId}`);
+  log('info', `Mod: ${isKnownDomain ? 'meta-megaforma' : 'standalone'}`);
+  log('info', `Rețea: ${CONFIG.NETWORK_ENDPOINTS.length} endpoint-uri configurate`);
+
+  restore();
+  initChart();
+  setupButtons();
+
+  renderAll();
+
+  // Puls principal
+  loop();
+  setInterval(loop, 2000);
+
+  // Sincronizare rețea
+  await syncNetwork();
+  setInterval(syncNetwork, CONFIG.SYNC_INTERVAL_MS);
+}
+
+init();
+</script>
+
+</body>
+</html>
+```
+
+---
