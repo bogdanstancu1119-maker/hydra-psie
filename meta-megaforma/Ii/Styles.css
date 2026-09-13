@@ -1,0 +1,135 @@
+/* ============================================================
+ * HYDRA PSIE — STILURI
+ * ============================================================ */
+
+:root {
+  color-scheme: dark;
+  --bg: #09090b;
+  --bg-soft: #101014;
+  --bg-card: #18181b;
+  --border: #27272a;
+  --text: #fafafa;
+  --text-dim: #a1a1aa;
+  --text-muted: #71717a;
+  --cyan: #22d3ee;
+  --violet: #a78bfa;
+  --green: #4ade80;
+  --yellow: #facc15;
+  --red: #f87171;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  padding: 1.25rem .85rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  min-height: 100vh;
+  font-size: 14px;
+}
+
+h1 {
+  font-size: 1.5rem;
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: .2rem;
+}
+
+.sub { color: var(--text-dim); font-size: .82rem; margin-bottom: 1rem; }
+
+.status-bar { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: 1.25rem; font-size: .72rem; }
+
+.badge {
+  padding: .28rem .55rem;
+  border-radius: .35rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  display: inline-flex; align-items: center; gap: .3rem;
+}
+.badge.live { border-color: var(--green); color: var(--green); }
+.badge.sync { border-color: var(--cyan); color: var(--cyan); }
+.badge.warn { border-color: var(--yellow); color: var(--yellow); }
+.badge.err { border-color: var(--red); color: var(--red); }
+
+.dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: currentColor;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: .55rem;
+  margin-bottom: 1.25rem;
+}
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: .55rem;
+  padding: .7rem .8rem;
+}
+.card-label { color: var(--text-dim); font-size: .65rem; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .28rem; }
+.card-value { font-size: 1.2rem; font-weight: 600; color: var(--cyan); font-variant-numeric: tabular-nums; }
+.card-unit { font-size: .68rem; color: var(--text-muted); margin-left: .2rem; }
+.card-bar { height: 3px; background: var(--bg-soft); border-radius: 2px; margin-top: .4rem; overflow: hidden; }
+.card-bar-fill { height: 100%; background: linear-gradient(90deg, var(--cyan), var(--violet)); transition: width .4s ease; border-radius: 2px; }
+
+section { margin-bottom: 1.5rem; }
+h2 { font-size: .92rem; color: var(--cyan); margin-bottom: .55rem; display: flex; align-items: center; gap: .4rem; }
+h2::before { content: ''; width: 3px; height: .85rem; background: linear-gradient(180deg, var(--cyan), var(--violet)); border-radius: 2px; }
+
+.btn {
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+  color: #09090b; border: none; border-radius: .4rem;
+  padding: .5rem .9rem; font-weight: 600; font-size: .78rem;
+  cursor: pointer; transition: opacity .2s;
+}
+.btn:hover { opacity: .85; }
+.btn.secondary { background: var(--bg-card); color: var(--text); border: 1px solid var(--border); }
+.btn.danger { background: var(--bg-card); color: var(--red); border: 1px solid var(--red); }
+.btn-row { margin-top: .6rem; display: flex; gap: .4rem; flex-wrap: wrap; }
+
+#log {
+  background: var(--bg-soft); border: 1px solid var(--border);
+  border-radius: .5rem; padding: .6rem;
+  font-family: ui-monospace, monospace; font-size: .7rem;
+  color: var(--text-dim); max-height: 220px; overflow-y: auto; line-height: 1.45;
+}
+#log .line { padding: .04rem 0; }
+#log .ts { color: var(--text-muted); margin-right: .4rem; }
+#log .ok { color: var(--green); }
+#log .info { color: var(--cyan); }
+#log .warn { color: var(--yellow); }
+#log .err { color: var(--red); }
+#log .pathfinder { color: var(--violet); }
+
+.organs { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: .35rem; }
+.organ { background: var(--bg-card); border: 1px solid var(--border); border-radius: .3rem; padding: .35rem; font-size: .65rem; text-align: center; transition: all .3s; }
+.organ.active { border-color: var(--green); color: var(--green); }
+.organ.idle { border-color: var(--yellow); color: var(--yellow); }
+.organ.sleep { border-color: var(--text-muted); color: var(--text-muted); }
+
+.perspectives { display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: .35rem; }
+.perspective { background: var(--bg-card); border: 1px solid var(--border); border-radius: .35rem; padding: .35rem .5rem; font-size: .7rem; display: flex; justify-content: space-between; align-items: center; }
+.perspective .p-gamma { color: var(--cyan); font-weight: 600; }
+.perspective.high .p-gamma { color: var(--green); }
+.perspective.low .p-gamma { color: var(--yellow); }
+.perspective.critical .p-gamma { color: var(--red); }
+
+.agents { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: .4rem; }
+.agent { background: var(--bg-card); border: 1px solid var(--border); border-radius: .4rem; padding: .5rem .65rem; font-size: .72rem; }
+.agent .a-name { color: var(--cyan); font-weight: 600; margin-bottom: .2rem; }
+.agent .a-meta { color: var(--text-muted); font-size: .68rem; display: flex; justify-content: space-between; }
+
+.chart-container { background: var(--bg-soft); border: 1px solid var(--border); border-radius: .5rem; padding: .4rem; height: 110px; }
+#throughput-chart { width: 100%; height: 100%; display: block; }
+
+footer { border-top: 1px solid var(--border); padding-top: .75rem; margin-top: 1.5rem; color: var(--text-muted); font-size: .7rem; text-align: center; }
