@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hydra PSIE — Meta-Megaforma</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="stylesheet" href="./ui/styles.css">
+<meta name="theme-color" content="#22d3ee">
+</head>
+<body>
+
+<h1>Hydra Meta-Megaforma</h1>
+<p class="sub">v4 · Fabrică efemeră · Pathfinder etic · Coordonare topologică · Protocol C3</p>
+
+<div class="status-bar">
+  <span class="badge live"><span class="dot"></span> Creier activ</span>
+  <span class="badge sync"><span class="dot"></span> <span id="agents-online">0</span> agenți</span>
+  <span class="badge warn" id="sdi-badge">SDI: <span id="sdi-val">—</span></span>
+  <span class="badge sync" id="garda-badge">Gardă: <span id="garda-val">—</span></span>
+  <span class="badge sync">Pathfinder: <span id="pf-stat">0/0</span></span>
+</div>
+
+<div class="grid">
+  <div class="card"><div class="card-label">Memorie cache</div><div class="card-value"><span id="mem-used">0.000</span><span class="card-unit">MB</span></div><div class="card-bar"><div class="card-bar-fill" id="mem-bar"></div></div></div>
+  <div class="card"><div class="card-label">Throughput</div><div class="card-value"><span id="throughput">0.000</span><span class="card-unit">GB/s</span></div><div class="card-bar"><div class="card-bar-fill" id="thr-bar"></div></div></div>
+  <div class="card"><div class="card-label">γ (coerență)</div><div class="card-value"><span id="gamma">0.000</span></div><div class="card-bar"><div class="card-bar-fill" id="gamma-bar"></div></div></div>
+  <div class="card"><div class="card-label">Ω_max</div><div class="card-value"><span id="omega-max">0.000</span></div><div class="card-bar"><div class="card-bar-fill" id="omega-bar"></div></div></div>
+  <div class="card"><div class="card-label">ω (viteză)</div><div class="card-value"><span id="omega-val">0.000</span></div><div class="card-bar"><div class="card-bar-fill" id="omega-v-bar"></div></div></div>
+  <div class="card"><div class="card-label">A (asumare)</div><div class="card-value"><span id="asumare">0.000</span></div><div class="card-bar"><div class="card-bar-fill" id="asumare-bar"></div></div></div>
+  <div class="card"><div class="card-label">K(t)</div><div class="card-value"><span id="k-val">0.000</span></div><div class="card-bar"><div class="card-bar-fill" id="k-bar"></div></div></div>
+  <div class="card"><div class="card-label">γ_div</div><div class="card-value"><span id="gamma-div">0.000</span></div><div class="card-bar"><div class="card-bar-fill" id="gdiv-bar"></div></div></div>
+  <div class="card"><div class="card-label">S_Ω</div><div class="card-value"><span id="s-omega">0.000</span></div><div class="card-bar"><div class="card-bar-fill" id="somega-bar"></div></div></div>
+  <div class="card"><div class="card-label">D_roi</div><div class="card-value"><span id="droi-val">0.000</span></div><div class="card-bar"><div class="card-bar-fill" id="droi-bar"></div></div></div>
+</div>
+
+<section>
+  <h2>Throughput live</h2>
+  <div class="chart-container"><canvas id="throughput-chart"></canvas></div>
+</section>
+
+<section>
+  <h2>Spectrul celor 20 perspective (A4)</h2>
+  <div class="perspectives" id="perspectives-grid"></div>
+</section>
+
+<section>
+  <h2>Agenți activi (<span id="agent-count">0</span>)</h2>
+  <div class="agents" id="agents-grid"></div>
+</section>
+
+<section>
+  <h2>Organe (<span id="organ-count">0</span>)</h2>
+  <div class="organs" id="organs-grid"></div>
+</section>
+
+<section>
+  <h2>Arhiva Compost (<span id="compost-count">0</span>)</h2>
+  <div style="background: var(--bg-soft); border: 1px solid var(--border); border-radius: .5rem; padding: .6rem; font-family: ui-monospace, monospace; font-size: .68rem; color: var(--text-dim); max-height: 140px; overflow-y: auto;" id="compost-list"></div>
+</section>
+
+<section>
+  <h2>Log creier central</h2>
+  <div id="log"></div>
+  <div class="btn-row">
+    <button class="btn" id="btn-pulse">Emitere puls</button>
+    <button class="btn secondary" id="btn-scan">Scanare context</button>
+    <button class="btn secondary" id="btn-compost-manual">Reciclare 25%</button>
+    <button class="btn secondary" id="btn-compost-clean">Curăță &gt;72h</button>
+    <button class="btn secondary" id="btn-recover">Recuperează pattern</button>
+    <button class="btn danger" id="btn-pathfinder">Simulează barieră</button>
+    <button class="btn secondary" id="btn-reset">Reset total</button>
+  </div>
+</section>
+
+<footer>
+  <span id="last-update">—</span> · PSIE v4.0 · CC0 1.0 · DOI: 10.6084/m9.figshare.32389911
+</footer>
+
+<script type="module">
+import { Orchestrator } from './agents/orchestrator.js';
+import { Persistence } from './core/persist.js';
+import { Log } from './core/log.js';
+import { renderAll } from './ui/render.js';
+import { ThroughputChart } from './ui/chart.js';
+
+const orchestrator = new Orchestrator();
+const brain = orchestrator.brain;
+const chart = new ThroughputChart('throughput-chart');
+
+// Restaurează starea
+Persistence.restore(brain);
+
+Log.add('ok', '🧠 Hydra PSIE v4 inițializat');
+Log.add('info', 'Fabrică efemeră 10 min · Pathfinder etic · Protocol C3');
+
+// Render inițial
+renderAll(brain, Log.recent(50));
+chart.draw(brain.throughput.history, 4);
+
+// Loop principal
+function loop() {
+  orchestrator.cycle();
+  renderAll(brain, Log.recent(50));
+  chart.draw(brain.throughput.history, 4);
+  Persistence.saveThrottled(brain);
+}
+
+loop();
+setInterval(loop, 2000);
+
+// Butoane
+document.getElementById('btn-pulse').onclick = () => {
+  brain.pulse();
+  Log.add('ok', 'Puls manual');
+  renderAll(brain, Log.recent(50));
+};
+
+document.getElementById('btn-scan').onclick = () => {
+  brain.scanContext();
+  renderAll(brain, Log.recent(50));
+};
+
+document.getElementById('btn-compost-manual').onclick = () => {
+  brain.recycleManual(0.25);
+  renderAll(brain, Log.recent(50));
+};
+
+document.getElementById('btn-compost-clean').onclick = () => {
+  brain.cleanCompost();
+  renderAll(brain, Log.recent(50));
+};
+
+document.getElementById('btn-recover').onclick = () => {
+  const ids = [...brain.compost.compost.keys()];
+  if (!ids.length) { Log.add('warn', 'Compost gol'); }
+  else {
+    const id = ids[Math.floor(Math.random() * ids.length)];
+    brain.recoverPattern(id);
+  }
+  renderAll(brain, Log.recent(50));
+};
+
+document.getElementById('btn-pathfinder').onclick = () => {
+  const obstacles = ['resurse', 'contexte', 'coordonare', 'integrare', 'paradigma', 'externa'];
+  const o = obstacles[Math.floor(Math.random() * obstacles.length)];
+  brain.findPath(`barieră_${o}`);
+  renderAll(brain, Log.recent(50));
+};
+
+document.getElementById('btn-reset').onclick = () => {
+  if (confirm('Reset total? Se va șterge starea locală.')) {
+    Persistence.clear();
+    location.reload();
+  }
+};
+
+// Service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./storage/service-worker.js').catch(() => {});
+}
+</script>
+
+</body>
+</html>
