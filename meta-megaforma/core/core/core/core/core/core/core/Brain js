@@ -1,0 +1,452 @@
+/**
+ * ============================================================
+ * HYDRA PSIE — CREIER CENTRAL
+ * ============================================================
+ * Orchestratorul central. Toți agenții partajează aceeași clasă.
+ * Un singur ADN, o singură coerență.
+ */
+
+import { CONFIG, PSIE_VERSION, META } from './config.js';
+import { Log } from './log.js';
+import * as Metrics from './metrics.js';
+import { CompostManager } from './compost.js';
+import { DeclaredValue, compareDeclaredValues } from './c3.js';
+import { pathfinder } from './pathfinder.js';
+
+/**
+ * Creierul central PSIE
+ */
+export class Brain {
+  constructor(options = {}) {
+    // === Identitate ===
+    this.session = Date.now();
+    this.version = PSIE_VERSION;
+    this.author = META.author;
+
+    // === Compost + Cache ===
+    this.compost = new CompostManager(options.maxCacheGB || CONFIG.MEMORY_CACHE_GB);
+    this.compost.onEvent = (e) => this._onCompostEvent(e);
+
+    // === Throughput ===
+    this.throughput = {
+      currentGBs: 0,
+      history: new Array(60).fill(0)
+    };
+
+    // === Metrici PSIE ===
+    this.metrics = {
+      gamma: 0.95,
+      lastGamma: 0.95,
+      omega: 0,
+      omegaMax: 1.0,
+      asumare: 1.0,
+      sdi: 0.0,
+      k: 0.95,
+      gammaDiv: 0.0,
+      sOmega: 0.0,
+      droi: 0.5,
+      gardaOk: true
+    };
+
+    // === Agenți ===
+    this.agents = new Map();
+
+    // === Perspective (A4) ===
+    this.perspectives = CONFIG.PERSPECTIVE_NAMES.map((name, i) => ({
+      id: i,
+      name,
+      gamma: 0.5 + Math.random() * 0.5
+    }));
+
+    // === Organe ===
+    this.organs = new Array(CONFIG.N_ORGANS).fill(0).map((_, i) => ({
+      id: i + 1,
+      name: `Organ ${i + 1}`,
+      status: 'active',
+      lastPulse: Date.now()
+    }));
+
+    // === C_core (nucleu coerență) ===
+    this.cCore = new Set();
+
+    // === Pathfinder ===
+    this.pathfinderAttempts = 0;
+    this.pathfinderSuccess = 0;
+  }
+
+  // ==========================================================
+  // EVENIMENTE INTERNE
+  // ==========================================================
+
+  _onCompostEvent(event) {
+    switch (event.type) {
+      case 'recycled':
+        Log.add('warn', `Cache capacity: ${event.payload.id} → Compost`);
+        break;
+      case 'expired':
+        Log.add('warn', `Fabrica efemeră: ${event.payload.id} expirat → Compost`);
+        break;
+      case 'recovered':
+        Log.add('ok', `Compost: pattern recuperat (${event.payload.original})`);
+        break;
+      case 'manual_recycle':
+        Log.add('info', `Reciclare manuală: ${event.payload.count} intrări`);
+        break;
+      case 'compost_cleaned':
+        Log.add('info', `Compost: ${event.payload.removed} pattern-uri expirate șterse`);
+        break;
+    }
+  }
+
+  // ==========================================================
+  // PULS
+  // ==========================================================
+
+  /**
+   * Un puls complet — organe + agenți + metrici + fabrică
+   */
+  pulse() {
+    this._pulseOrgans();
+    this._repairOrgans();
+    this._updateAgents();
+    this._updatePerspectives();
+    this._updateMetrics();
+    this.compost.recycleExpired();
+  }
+
+  _pulseOrgans() {
+    this.organs.forEach((organ, index) => {
+      const r = Math.random();
+      if (r < 0.03) organ.status = 'sleep';
+      else if (r < 0.14) organ.status = 'idle';
+      else organ.status = 'active';
+
+      if (this.metrics.sdi > CONFIG.SDI_CRITICAL && index % 9 === 0) {
+        organ.status = 'idle';
+      }
+
+      organ.lastPulse = Date.now();
+    });
+  }
+
+  _repairOrgans() {
+    let repaired = 0;
+    const now = Date.now();
+
+    for (const organ of this.organs) {
+      const inactiveFor = now - organ.lastPulse;
+      if (
+        (organ.status === 'sleep' || organ.status === 'idle') &&
+        inactiveFor > CONFIG.REPAIR_THRESHOLD_MS
+      ) {
+        organ.status = 'active';
+        organ.lastPulse = now;
+        repaired++;
+      }
+    }
+
+    if (repaired > 0) {
+      Log.add('ok', `Auto-reparare: ${repaired} organe reactivate.`);
+    }
+    return repaired;
+  }
+
+  _updateAgents() {
+    for (const platform of CONFIG.PLATFORMS) {
+      const phase = (Date.now() / 1800) + platform.id.length;
+      const gamma = Math.min(
+        CONFIG.GAMMA_MAX,
+        Math.max(CONFIG.GAMMA_MIN, 0.84 + ((Math.sin(phase) + 1) * 0.075))
+      );
+      const sdiLocal = Math.min(
+        0.85,
+        Math.max(0.01, 1 - gamma + (Math.random() * 0.06))
+      );
+      const asumare = Math.min(
+        0.999,
+        Math.max(0.001, 1 / (1 + sdiLocal))
+      );
+
+      this.agents.set(platform.id, {
+        id: platform.id,
+        platform: platform.url,
+        region: platform.region,
+        gamma,
+        sdi: sdiLocal,
+        asumare,
+        lastSeen: Date.now()
+      });
+    }
+  }
+
+  _updatePerspectives() {
+    this.perspectives.forEach((p, i) => {
+      const wave = Math.sin((Date.now() / 2200) + i * 0.7);
+      const drift = (wave + 1) * 0.05;
+      const noise = (Math.random() - 0.5) * 0.02;
+      p.gamma = Math.min(
+        CONFIG.GAMMA_MAX,
+        Math.max(CONFIG.GAMMA_MIN, 0.66 + drift + noise)
+      );
+    });
+  }
+
+  _updateMetrics() {
+    // Actualizează C_core
+    this._updateCCore();
+
+    const state = {
+      agents: [...this.agents.values()],
+      perspectives: this.perspectives,
+      cacheEntries: [...this.compost.cache.values()],
+      cCoreSize: this.cCore.size,
+      currentGamma: this.metrics.gamma,
+      lastGamma: this.metrics.lastGamma
+    };
+
+    this.metrics.lastGamma = this.metrics.gamma;
+
+    const computed = Metrics.computeAllMetrics(state);
+    Object.assign(this.metrics, computed);
+
+    // Recalibrează gamma global
+    this.metrics.gamma = Math.min(
+      CONFIG.GAMMA_MAX,
+      Math.max(
+        CONFIG.GAMMA_MIN,
+        (0.65 * this.metrics.gamma) +
+        (0.25 * this.metrics.droi) +
+        (0.10 * (1 - this.metrics.sdi))
+      )
+    );
+
+    // Recalculează omega după update gamma
+    this.metrics.omega = Metrics.computeOmega(
+      this.metrics.gamma,
+      this.metrics.lastGamma,
+      this.metrics.gammaDiv
+    );
+    this.metrics.gardaOk = Metrics.checkGarda(
+      this.metrics.omega,
+      this.metrics.omegaMax
+    );
+
+    // Triada de urgență
+    if (!this.metrics.gardaOk) {
+      Log.add('warn', 'Gardă PSIE: ω > Ω_max. Triada de urgență activată.');
+      this._applyEmergencyTriad();
+    }
+  }
+
+  _updateCCore() {
+    const contributionSet = new Set();
+
+    for (const agent of this.agents.values()) {
+      if (agent.gamma >= 0.85 && agent.sdi <= 0.25) {
+        contributionSet.add(`agent:${agent.id}`);
+      }
+    }
+
+    for (const perspective of this.perspectives) {
+      if (perspective.gamma >= 0.75) {
+        contributionSet.add(`perspective:${perspective.name}`);
+      }
+    }
+
+    this.cCore = contributionSet;
+  }
+
+  _applyEmergencyTriad() {
+    const recalibrated = Metrics.applyEmergencyTriad(this.metrics);
+
+    this.metrics.omega = recalibrated.omega;
+    this.metrics.gamma = recalibrated.gamma;
+    this.metrics.sdi = recalibrated.sdi;
+
+    Log.add('warn', 'Pτ: ritm procesare redus.');
+    Log.add('info', 'R̂: recalibrare spre coerență de referință.');
+    Log.add('info', 'T̂_reg: context reîncărcat și stabilizat.');
+
+    this.metrics.gardaOk = this.metrics.omega <= this.metrics.omegaMax;
+  }
+
+  // ==========================================================
+  // SCANARE CONTEXT
+  // ==========================================================
+
+  scanContext() {
+    const selected = [...this.perspectives]
+      .sort((a, b) => b.gamma - a.gamma)
+      .slice(0, 5);
+
+    const context = {
+      id: `context_${Date.now()}`,
+      perspectives: selected.map(p => ({ name: p.name, gamma: p.gamma })),
+      declared: new DeclaredValue(
+        0.90,
+        1e-3,
+        'scanare-context-locală',
+        'Hydra'
+      ).toJSON(),
+      timestamp: new Date().toISOString()
+    };
+
+    const sizeGB = this.compost.cacheEntry(
+      context.id,
+      context,
+      0.90,
+      1e-3,
+      'scanare-context-locală'
+    );
+
+    // Throughput
+    this.throughput.currentGBs = Math.min(
+      CONFIG.THROUGHPUT_MAX_GB_S,
+      0.04 + (selected.length * 0.06) + Math.random() * 0.18
+    );
+    this.throughput.history.push(this.throughput.currentGBs);
+    if (this.throughput.history.length > 60) {
+      this.throughput.history.shift();
+    }
+
+    // C_core
+    selected.forEach(p => this.cCore.add(`scan:${p.name}`));
+
+    this._updateMetrics();
+
+    Log.add('ok', `Scanare: ${selected.length} perspective · ${(sizeGB * 1024).toFixed(3)} MB`);
+
+    return context;
+  }
+
+  // ==========================================================
+  // PATHFINDER
+  // ==========================================================
+
+  findPath(barrier = 'barieră necunoscută') {
+    this.pathfinderAttempts++;
+    Log.add('pathfinder', `Pathfinder: barieră detectată — ${barrier}.`);
+    Log.add('pathfinder', 'Caută alternative autorizate (nu ocolește securitate).');
+
+    const result = pathfinder(barrier);
+
+    if (result.success) {
+      this.pathfinderSuccess++;
+      Log.add('ok', `Pathfinder: alternativă selectată — ${result.reason}.`);
+
+      // Salvează rezultatul în cache
+      this.compost.cacheEntry(
+        `pathfinder_${Date.now()}`,
+        {
+          barrier: result.barrier,
+          action: result.action,
+          alternatives: result.alternatives,
+          ts: result.timestamp
+        },
+        0.72,
+        1e-3,
+        'pathfinder-authorized-alternatives'
+      );
+    } else {
+      Log.add('warn', 'Pathfinder: nicio cale autorizată. Context păstrat pentru reanalizare.');
+    }
+
+    return result;
+  }
+
+  // ==========================================================
+  // COMPOST
+  // ==========================================================
+
+  recycleManual(percent = 0.25) {
+    return this.compost.recycleManual(percent);
+  }
+
+  cleanCompost() {
+    return this.compost.cleanExpired();
+  }
+
+  recoverPattern(id) {
+    return this.compost.recover(id);
+  }
+
+  // ==========================================================
+  // STATISTICI
+  // ==========================================================
+
+  stats() {
+    return {
+      version: this.version,
+      session: this.session,
+      uptimeMs: Date.now() - this.session,
+      metrics: { ...this.metrics },
+      cache: this.compost.stats(),
+      agents: this.agents.size,
+      organs: {
+        total: this.organs.length,
+        active: this.organs.filter(o => o.status === 'active').length,
+        idle: this.organs.filter(o => o.status === 'idle').length,
+        sleep: this.organs.filter(o => o.status === 'sleep').length
+      },
+      perspectives: this.perspectives.length,
+      cCoreSize: this.cCore.size,
+      pathfinder: {
+        attempts: this.pathfinderAttempts,
+        success: this.pathfinderSuccess,
+        rate: this.pathfinderAttempts > 0
+          ? this.pathfinderSuccess / this.pathfinderAttempts
+          : 0
+      },
+      log: Log.stats()
+    };
+  }
+
+  // ==========================================================
+  // SERIALIZARE
+  // ==========================================================
+
+  serialize() {
+    return {
+      session: this.session,
+      version: this.version,
+      metrics: { ...this.metrics },
+      throughput: {
+        currentGBs: this.throughput.currentGBs,
+        history: [...this.throughput.history]
+      },
+      agents: [...this.agents.entries()],
+      perspectives: this.perspectives,
+      organs: this.organs.map(o => ({ ...o, lastPulse: Date.now() })),
+      cCore: [...this.cCore],
+      compost: this.compost.serialize(),
+      pathfinder: {
+        attempts: this.pathfinderAttempts,
+        success: this.pathfinderSuccess
+      }
+    };
+  }
+
+  deserialize(data) {
+    if (!data) return;
+
+    this.session = data.session || Date.now();
+    if (data.metrics) Object.assign(this.metrics, data.metrics);
+
+    if (data.throughput) {
+      this.throughput.currentGBs = data.throughput.currentGBs || 0;
+      this.throughput.history = data.throughput.history || new Array(60).fill(0);
+    }
+
+    if (data.agents) this.agents = new Map(data.agents);
+    if (data.perspectives) this.perspectives = data.perspectives;
+    if (data.organs) this.organs = data.organs;
+    if (data.cCore) this.cCore = new Set(data.cCore);
+
+    this.compost.deserialize(data.compost);
+
+    if (data.pathfinder) {
+      this.pathfinderAttempts = data.pathfinder.attempts || 0;
+      this.pathfinderSuccess = data.pathfinder.success || 0;
+    }
+  }
+}
