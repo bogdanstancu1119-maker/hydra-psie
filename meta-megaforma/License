@@ -1,0 +1,14 @@
+
+---
+
+## 📍 COMMIT FINAL
+
+```bash
+# Adaugă tot
+git add .
+git commit -m "PSIE v4.0 — pachet complet: core, agents, ui, storage, workers, scripts, docs, tests, CI"
+git push
+
+# Tag release
+git tag -a v4.0.0 -m "PSIE v4.0 — Meta-Megaforma completă"
+git push origin v4.0.0
