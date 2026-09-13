@@ -24,3 +24,28 @@
   "categories": ["productivity", "utilities", "developer"],
   "lang": "ro"
 }
+{
+  "bootstrap": {
+    "entry": "platform-bootstrap.js",
+    "auto_detect": true,
+    "verify_essentials": true,
+    "halt_on_missing_essential": true,
+    "log_to_file": false,
+    "modes": {
+      "standalone": {
+        "description": "Server autonom complet",
+        "loads": ["data", "core", "server", "agents", "deployment"],
+        "skips": ["workers"]
+      },
+      "edge-assisted": {
+        "description": "Server + workers externe",
+        "loads": ["data", "core", "server", "agents", "ui", "storage", "deployment", "workers"]
+      },
+      "client-only": {
+        "description": "Doar browser, fără server",
+        "loads": ["data", "core", "ui", "storage"],
+        "skips": ["server", "agents", "deployment", "workers"]
+      }
+    }
+  }
+}
