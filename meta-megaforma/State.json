@@ -1,0 +1,14 @@
+{
+  "node": "hidra-smart-core.com",
+  "metrics": {
+    "gamma": 0.95,
+    "sdi": 0.05,
+    "asumare": 0.95,
+    "k": 0.95,
+    "droi": 0.9
+  },
+  "perspectives": 20,
+  "organs": 38,
+  "updatedAt": "2026-09-13T12:00:00Z",
+  "online": true
+}
