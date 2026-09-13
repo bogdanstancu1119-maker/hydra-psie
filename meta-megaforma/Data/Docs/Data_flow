@@ -1,0 +1,9 @@
+
+## Flow-ul de date
+1. Utilizator → index.html
+2. index.html → importă core/brain.js
+3. Brain → pulse() la fiecare 2s
+4. Pulse → organe + agenți + metrici
+5. Metrici → computeAllMetrics()
+6. Render → ui/render.js → DOM
+7. Persist → localStorage
