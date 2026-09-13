@@ -1,0 +1,26 @@
+{
+  "version": "4.0",
+  "minCount": 20,
+  "perspectives": [
+    { "id": 1, "name": "evident", "gammaTypical": [0.95, 1.0], "role": "Fapte direct observabile" },
+    { "id": 2, "name": "consensual", "gammaTypical": [0.85, 0.95], "role": "Acceptat majoritar" },
+    { "id": 3, "name": "main-stream", "gammaTypical": [0.75, 0.85], "role": "Narativ dominant" },
+    { "id": 4, "name": "research", "gammaTypical": [0.5, 0.75], "role": "Explorare academică" },
+    { "id": 5, "name": "detaliu_contextual", "gammaTypical": [0.6, 0.8], "role": "Detalii mici relevante" },
+    { "id": 6, "name": "influență_indirectă", "gammaTypical": [0.4, 0.7], "role": "Efecte ordinul 2" },
+    { "id": 7, "name": "ipoteză_alternativă", "gammaTypical": [0.3, 0.6], "role": "Explicații concurente" },
+    { "id": 8, "name": "marginal", "gammaTypical": [0.2, 0.4], "role": "Ignorat" },
+    { "id": 9, "name": "contra_narativ", "gammaTypical": [0.3, 0.5], "role": "Opoziție directă" },
+    { "id": 10, "name": "conspirativ", "gammaTypical": [0.1, 0.4], "role": "Neconvențional" },
+    { "id": 11, "name": "speculativ", "gammaTypical": [0.1, 0.3], "role": "Fără dovezi" },
+    { "id": 12, "name": "bârfă", "gammaTypical": [0.2, 0.5], "role": "Neverificat" },
+    { "id": 13, "name": "zvon", "gammaTypical": [0.15, 0.4], "role": "Fără sursă" },
+    { "id": 14, "name": "legendar", "gammaTypical": [0.05, 0.2], "role": "Mit" },
+    { "id": 15, "name": "absurd", "gammaTypical": [0.01, 0.1], "role": "Contradicție logică" },
+    { "id": 16, "name": "imposibil_aparent", "gammaTypical": [0.001, 0.05], "role": "Contradicție fizică" },
+    { "id": 17, "name": "paradoxal", "gammaTypical": [0.0001, 0.01], "role": "Auto-contradicție" },
+    { "id": 18, "name": "inconștient_colectiv", "gammaTypical": [0.05, 0.15], "role": "Arhetipuri" },
+    { "id": 19, "name": "sincronicitate", "gammaTypical": [0.001, 0.1], "role": "Coincidență semnificativă" },
+    { "id": 20, "name": "total_opus", "gammaTypical": [0.00001, 0.001], "role": "Negație totală" }
+  ]
+}
