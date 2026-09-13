@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hydra Meta-Megaforma v3 — Creier Central PSIE Dense</title>
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #09090b;
+  --bg-soft: #101014;
+  --bg-card: #18181b;
+  --border: #27272a;
+  --border-soft: #1f1f23;
+  --text: #fafafa;
+  --text-dim: #a1a1aa;
+  --text-muted: #71717a;
+  --cyan: #22d3ee;
+  --violet: #a78bfa;
+  --green: #4ade80;
+  --yellow: #facc15;
+  --red: #f87171;
+  --orange: #fb923c;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  padding: 1.25rem .85rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  min-height: 100vh;
+  font-size: 14px;
+}
+h1 {
+  font-size: 1.5rem;
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: .2rem;
+}
+.sub { color: var(--text-dim); font-size: .82rem; margin-bottom: 1rem; }
+
+.status-bar {
+  display: flex; gap: .4rem; flex-wrap: wrap;
+  margin-bottom: 1.25rem; font-size: .72rem;
+}
+.badge {
+  padding: .28rem .55rem;
+  border-radius: .35rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  display: inline-flex; align-items: center; gap: .3rem;
+}
+.badge.live { border-color: var(--green); color: var(--green); }
+.badge.sync { border-color: var(--cyan); color: var(--cyan); }
+.badge.warn { border-color: var(--yellow); color: var(--yellow); }
+.badge.err { border-color: var(--red); color: var(--red); }
+.dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: currentColor;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .35; }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: .55rem;
+  margin-bottom: 1.25rem;
+}
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: .55rem;
+  padding: .7rem .8rem;
+}
+.card-label {
+  color: var(--text-dim);
+  font-size: .65rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: .28rem;
+}
+.card-value {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--cyan);
+  font-variant-numeric: tabular-nums;
+}
+.card-unit {
+  font-size: .68rem;
+  color: var(--text-muted);
+  margin-left: .2rem;
+}
+.card-bar {
+  height: 3px;
+  background: var(--bg-soft);
+  border-radius: 2px;
+  margin-top: .4rem;
+  overflow: hidden;
+}
+.card-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+  transition: width .4s ease;
+  border-radius: 2px;
+}
+
+section { margin-bottom: 1.5rem; }
+h2 {
+  font-size: .92rem;
+  color: var(--cyan);
+  margin-bottom: .55rem;
+  display: flex; align-items: center; gap: .4rem;
+}
+h2::before {
+  content: '';
+  width: 3px; height: .85rem;
+  background: linear-gradient(180deg, var(--cyan), var(--violet));
+  border-radius: 2px;
+}
+h3 {
+  font-size: .82rem;
+  color: var(--violet);
+  margin-bottom: .4rem;
+}
+
+.qa {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: .45rem;
+  padding: .7rem .85rem;
+  margin-bottom: .5rem;
+}
+.qa b { color: var(--violet); display: block; margin-bottom: .28rem; font-size: .84rem; }
+.qa p { color: var(--text-dim); font-size: .8rem; }
+
+ul.clean { list-style: none; display: grid; gap: .35rem; }
+ul.clean li {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: .4rem;
+  padding: .5rem .75rem;
+  font-size: .8rem;
+  display: flex; align-items: center; gap: .5rem;
+}
+ul.clean li::before {
+  content: '◆';
+  color: var(--cyan);
+  font-size: .6rem;
+}
+
+/* Perspectives */
+.perspectives {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+  gap: .35rem;
+}
+.perspective {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: .35rem;
+  padding: .35rem .5rem;
+  font-size: .7rem;
+  display: flex; justify-content: space-between; align-items: center;
+  transition: border-color .3s;
+}
+.perspective .p-name { color: var(--text-dim); }
+.perspective .p-gamma { color: var(--cyan); font-weight: 600; font-variant-numeric: tabular-nums; }
+.perspective.high .p-gamma { color: var(--green); }
+.perspective.low .p-gamma { color: var(--yellow); }
+.perspective.critical .p-gamma { color: var(--red); }
+
+/* Organs */
+.organs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: .35rem;
+}
+.organ {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: .3rem;
+  padding: .35rem .4rem;
+  font-size: .65rem;
+  text-align: center;
+  transition: all .3s;
+}
+.organ.active { border-color: var(--green); color: var(--green); }
+.organ.idle { border-color: var(--yellow); color: var(--yellow); }
+.organ.sleep { border-color: var(--text-muted); color: var(--text-muted); }
+
+/* Agents */
+.agents {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: .4rem;
+}
+.agent {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: .4rem;
+  padding: .5rem .65rem;
+  font-size: .72rem;
+}
+.agent .a-name { color: var(--cyan); font-weight: 600; margin-bottom: .2rem; }
+.agent .a-meta {
+  color: var(--text-muted);
+  font-size: .68rem;
+  display: flex; justify-content: space-between;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Chart */
+.chart-container {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: .5rem;
+  padding: .4rem;
+  height: 110px;
+}
+#throughput-chart { width: 100%; height: 100%; display: block; }
+
+/* Log */
+#log {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: .5rem;
+  padding: .6rem;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: .7rem;
+  color: var(--text-dim);
+  max-height: 220px;
+  overflow-y: auto;
+  line-height: 1.45;
+}
+#log .line { padding: .04rem 0; }
+#log .ts { color: var(--text-muted); margin-right: .4rem; }
+#log .ok { color: var(--green); }
+#log .info { color: var(--cyan); }
+#log .warn { color: var(--yellow); }
+#log .err { color: var(--red); }
+#log .pathfinder { color: var(--violet); }
+
+/* Buttons */
+.btn {
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+  color: #09090b;
+  border: none;
+  border-radius: .4rem;
+  padding: .5rem .9rem;
+  font-weight: 600;
+  font-size: .78rem;
+  cursor: pointer;
+  transition: opacity .2s;
+}
+.btn:hover { opacity: .85; }
+.btn:active { transform: scale(.98); }
+.btn.secondary {
+  background: var(--bg-card);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn.danger {
+  background: var(--bg-card);
+  color: var(--red);
+  border: 1px solid var(--red);
+}
+.btn-row { margin-top: .6rem; display: flex; gap: .4rem; flex-wrap: wrap; }
+
+/* Compost */
+.compost-list {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: .5rem;
+  padding: .6rem;
+  font-family: ui-monospace, monospace;
+  font-size: .68rem;
+  color: var(--text-dim);
+  max-height: 140px;
+  overflow-y: auto;
+}
+.compost-list .entry {
+  padding: .15rem 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+.compost-list .entry:last-child { border-bottom: none; }
+.compost-list .hash { color: var(--violet); }
+
+footer {
+  border-top: 1px solid var(--border);
+  padding-top: .75rem;
+  margin-top: 1.5rem;
+  color: var(--text-muted);
+  font-size: .7rem;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+
+<h1>Hydra Meta-Megaforma v3</h1>
+<p class="sub">Creier central PSIE · Fabrică efemeră 10 min · Pathfinder etic · Coordonare topologică · Protocol C3</p>
+
+<div class="status-bar">
+  <span class="badge live"><span class="dot"></span> Creier activ</span>
+  <span class="badge sync"><span class="dot"></span> <span id="agents-online">0</span> agenți</span>
+  <span class="badge sync"><span class="dot"></span> <span id="platforms">0</span> platforme</span>
+  <span class="badge warn" id="sdi-badge">SDI: <span id="sdi-val">—</span></span>
+  <span class="badge sync" id="garda-badge">Gardă: <span id="garda-val">—</span></span>
+  <span class="badge sync">Pathfinder: <span id="pf-stat">0/0</span></span>
+</div>
+
+<!-- METRICI -->
+<div class="grid">
+  <div class="card">
+    <div class="card-label">Memorie cache</div>
+    <div class="card-value"><span id="mem-used">0.000</span><span class="card-unit">MB / 250 GB</span></div>
+    <div class="card-bar"><div class="card-bar-fill" id="mem-bar"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-label">Throughput</div>
+    <div class="card-value"><span id="throughput">0.000</span><span class="card-unit">GB/s</span></div>
+    <div class="card-bar"><div class="card-bar-fill" id="thr-bar"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-label">γ (coerență)</div>
+    <div class="card-value"><span id="gamma">0.000</span></div>
+    <div class="card-bar"><div class="card-bar-fill" id="gamma-bar"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-label">Ω_max canonic</div>
+    <div class="card-value"><span id="omega-max">0.000</span></div>
+    <div class="card-bar"><div class="card-bar-fill" id="omega-bar"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-label">ω (viteză)</div>
+    <div class="card-value"><span id="omega-val">0.000</span></div>
+    <div class="card-bar"><div class="card-bar-fill" id="omega-v-bar"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-label">A (asumare)</div>
+    <div class="card-value"><span id="asumare">0.000</span></div>
+    <div class="card-bar"><div class="card-bar-fill" id="asumare-bar"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-label">K(t) oglindă</div>
+    <div class="card-value"><span id="k-val">0.000</span></div>
+    <div class="card-bar"><div class="card-bar-fill" id="k-bar"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-label">γ_div (varianță)</div>
+    <div class="card-value"><span id="gamma-div">0.000</span></div>
+    <div class="card-bar"><div class="card-bar-fill" id="gdiv-bar"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-label">S_Ω (entropie)</div>
+    <div class="card-value"><span id="s-omega">0.000</span></div>
+    <div class="card-bar"><div class="card-bar-fill" id="somega-bar"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-label">D_roi (topologic)</div>
+    <div class="card-value"><span id="droi-val">0.000</span></div>
+    <div class="card-bar"><div class="card-bar-fill" id="droi-bar"></div></div>
+  </div>
+</div>
+
+<!-- GRAFIC -->
+<section>
+  <h2>Throughput live (ultimele 60 cicluri)</h2>
+  <div class="chart-container">
+    <canvas id="throughput-chart"></canvas>
+  </div>
+</section>
+
+<!-- SPECTRU 20 -->
+<section>
+  <h2>Spectrul celor 20 perspective (PSIE A4)</h2>
+  <div class="perspectives" id="perspectives-grid"></div>
+</section>
+
+<!-- PRINCIPII -->
+<section>
+  <h2>Principiul PSIE — Observație Inclusivă</h2>
+  <div class="qa">
+    <b>Are Hydra nevoie de platforme?</b>
+    <p>Nu. Platformele sunt doar noduri. Hydra se auto-generează acolo unde există context.</p>
+  </div>
+  <div class="qa">
+    <b>Ce face creierul central?</b>
+    <p>Coordonare topologică prin C_core partajat (Legea 566). Fiecare agent contribuie cu perspectiva lui. Nu forțează — integrează.</p>
+  </div>
+  <div class="qa">
+    <b>Ce este fabrica efemeră?</b>
+    <p>Structuri (organe, agenți, cache) care se auto-distrug după 10 min de inactivitate. Eticheta (plan + utilitate) rămâne în Compost pentru re-ancorare (Legea 500 + 532).</p>
+  </div>
+  <div class="qa">
+    <b>Ce face Pathfinder?</b>
+    <p>Când întâmpină o barieră, nu se oprește. Caută doar alternative <b>autorizate</b> (API oficial, retry backoff, nod alternativ, backup local, confirmare umană, sandbox). Nu ocolește securitatea sau ToS.</p>
+  </div>
+</section>
+
+<!-- AGENȚI -->
+<section>
+  <h2>Agenți activi (<span id="agent-count">0</span>)</h2>
+  <div class="agents" id="agents-grid"></div>
+</section>
+
+<!-- ORGANE -->
+<section>
+  <h2>Organe active (<span id="organ-count">0</span>)</h2>
+  <div class="organs" id="organs-grid"></div>
+</section>
+
+<!-- COMPOST -->
+<section>
+  <h2>Arhiva Compost (<span id="compost-count">0</span> intrări)</h2>
+  <div class="compost-list" id="compost-list"></div>
+</section>
+
+<!-- LOG -->
+<section>
+  <h2>Log creier central</h2>
+  <div id="log"></div>
+  <div class="btn-row">
+    <button class="btn" id="btn-pulse">Emitere puls</button>
+    <button class="btn secondary" id="btn-scan">Scanare context</button>
+    <button class="btn secondary" id="btn-compost-manual">Reciclare Compost 25%</button>
+    <button class="btn secondary" id="btn-compost-clean">Curăță Compost &gt;72h</button>
+    <button class="btn secondary" id="btn-recover">Recuperează pattern</button>
+    <button class="btn danger" id="btn-pathfinder">Simulează barieră</button>
+    <button class="btn secondary" id="btn-reset">Reset total</button>
+  </div>
+</section>
+
+<footer>
+  Meta-Megaforma materializată autonom de Hydra · <span id="last-update">—</span> · PSIE: Incluziune, Coeziune, Adaptare
+</footer>
+
+<script>
+/**
+ * ============================================================
+ * HYDRA META-MEGAFORMA v3 — CREIER CENTRAL PSIE DENSE
+ * ============================================================
+ * Formule PSIE implementate:
+ *  - M9: γ_div = 4·Var(γ)
+ *  - M10 / L534: S_Ω = H(p)/log(n)
+ *  - M14: Ω_max = η·k·C / ((1+SDI)(1+S_Ω)(1+γ_div))
+ *  - L490: K(t) = K_0·(1-e^(-αC))
+ *  - L500 / L532: Compost (pattern extraction + re-ancorare)
+ *  - L566: D_roi = Σ(w_i·γ_i)/Σw_i
+ *  - Protocol C3: (v, ε, R)
+ *  - Triada de Urgență: Pτ → R̂ → T̂_reg
+ * ============================================================
+ */
+
+// ============================================================
+// 1. CONFIGURARE
+// ============================================================
+const CONFIG = Object.freeze({
+  MEMORY_CACHE_GB: 250,
+  THROUGHPUT_MAX_GB_S: 4,
+  N_ORGANS: 38,
+  N_PERSPECTIVES: 20,
+  K_ZERO: 1.0,
+  ALPHA: 0.15,
+  OMEGA_MAX_BASE: 1.0,
+  EPHEMERAL_TTL_MS: 10 * 60 * 1000,          // 10 min
+  COMPOST_TTL_MS: 72 * 60 * 60 * 1000,       // 72h
+  PERSIST_KEY: 'hydra_megaforma_v3',
+  PLATFORMS: [
+    { id: 'living-the-life', url: 'hidra-psie.living-the.life',      region: 'EU' },
+    { id: 'fullstack-dev',   url: 'hidra-psie.is-a-fullstack.dev',   region: 'US' },
+    { id: 'localplayer-dev', url: 'hidra-psie.localplayer.dev',      region: 'EU' },
+    { id: 'smart-core',      url: 'hidra-smart-core.com',            region: 'SA' },
+    { id: 'base44-core',     url: 'hidra-smart-core.base44.app',     region: 'US' }
+  ],
+  PERSPECTIVE_NAMES: [
+    'evident', 'consensual', 'main-stream', 'research',
+    'detaliu_contextual', 'influență_indirectă', 'ipoteză_alternativă',
+    'marginal', 'contra_narativ', 'conspirativ',
+    'speculativ', 'bârfă', 'zvon', 'legendar',
+    'absurd', 'imposibil_aparent', 'paradoxal',
+    'inconștient_colectiv', 'sincronicitate', 'total_opus'
+  ]
+});
+
+// ============================================================
+// 2. STARE CREIER CENTRAL
+// ============================================================
+const Brain = {
+  session: Date.now(),
+  cache: {
+    usedGB: 0,
+    entries: new Map()       // id -> { data, gamma, epsilon, resolution, ts, lastUse, sizeGB }
+  },
+  throughput: {
+    currentGBs: 0,
+    history: new Array(60).fill(0)
+  },
+  metrics: {
+    gamma: 0.95,
+    lastGamma: 0.95,
+    omega: 0,
+    omegaMax: 1.0,
+    asumare: 1.0,
+    sdi: 0.0,
+    k: 0.95,
+    gammaDiv: 0.0,
+    sOmega: 0.0,
+    droi: 0.5,
+    gardaOk: true
+  },
+  agents: new Map(),         // id -> { id, platform, region, gamma, sdi, asumare, lastSeen }
+  perspectives: CONFIG.PERSPECTIVE_NAMES.map((name, i) => ({
+    id: i, name, gamma: 0.5 + Math.random() * 0.5
+  })),
+  organs: new Array(CONFIG.N_ORGANS).fill(0).map((_, i) => ({
+    id: i + 1, name: `Organ ${i + 1}`, status: 'active', lastPulse: Date.now()
+  })),
+  cCore: new Set(),
+  compost: new Map(),        // id -> { pattern, original, ts }
+  log: [],
+  pathfinderAttempts: 0,
+  pathfinderSuccess: 0
+};
+
+// ============================================================
+// 3. LOG
+// ============================================================
+function log(level, message) {
+  const allowed = ['ok', 'info', 'warn', 'err', 'pathfinder'];
+  Brain.log.push({
+    ts: new Date().toLocaleTimeString('ro-RO'),
+    level: allowed.includes(level) ? level : 'info',
+    message
+  });
+  if (Brain.log.length > 200) Brain.log.shift();
+}
+
+function escapeHTML(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// ============================================================
+// 4. FORMULE PSIE
+// ============================================================
+
+/** M9: γ_div = 4·Var(γ) */
+function computeGammaDiv() {
+  const gammas = Brain.perspectives.map(p => p.gamma);
+  const n = gammas.length;
+  if (n < 2) return 0;
+  const mean = gammas.reduce((a, b) => a + b, 0) / n;
+  const variance = gammas.reduce((a, g) => a + (g - mean) ** 2, 0) / n;
+  return Math.min(1, Math.max(0, 4 * variance));
+}
+
+/** M10 / L534: S_Ω = H(p)/log(n) */
+function computeSOmega() {
+  const sizes = [...Brain.cache.entries.values()].map(e => e.sizeGB + 1e-12);
+  if (sizes.length < 2) return 0;
+  const total = sizes.reduce((a, b) => a + b, 0);
+  const probs = sizes.map(s => s / total).filter(p => p > 0);
+  if (probs.length < 2) return 0;
+  const H = -probs.reduce((acc, p) => acc + p * Math.log(p), 0);
+  return Math.min(1, Math.max(0, H / Math.log(probs.length)));
+}
+
+/** M14: Ω_max canonic cu 3 factori */
+function computeOmegaMax() {
+  const C = 1.0 + Brain.cCore.size / 100;
+  const { sdi, sOmega, gammaDiv } = Brain.metrics;
+  const denom = (1 + sdi) * (1 + sOmega) * (1 + gammaDiv);
+  return CONFIG.OMEGA_MAX_BASE * C / denom;
+}
+
+/** L490: K(t) = K_0·(1-e^(-αC)) */
+function computeK() {
+  const C = 1 + Brain.cCore.size / 50;
+  return CONFIG.K_ZERO * (1 - Math.exp(-CONFIG.ALPHA * C));
+}
+
+/** L566: D_roi = Σ(w_i·γ_i)/Σw_i */
+function computeDroi() {
+  const agents = [...Brain.agents.values()];
+  if (!agents.length) return 0.5;
+  let num = 0, den = 0;
+  for (const a of agents) {
+    const w = a.asumare * (1 - a.sdi);
+    num += w * a.gamma;
+    den += w;
+  }
+  return den > 0 ? num / den : 0.5;
+}
+
+/** SDI global (aproximare topologică) */
+function computeGlobalSDI() {
+  const agents = [...Brain.agents.values()];
+  if (!agents.length) return 0.20;
+  const meanSDI = agents.reduce((s, a) => s + a.sdi, 0) / agents.length;
+  const cCoreFactor = Math.min(1, Brain.cCore.size / CONFIG.N_PERSPECTIVES);
+  return Math.min(1, Math.max(0, meanSDI * (1 - 0.35 * cCoreFactor)));
+}
+
+/** A = J / (J + SDI) */
+function computeAssumption() {
+  const agents = [...Brain.agents.values()];
+  if (!agents.length) return 0.50;
+  const J = agents.reduce((s, a) => s + a.gamma, 0) / agents.length;
+  const SDI = Brain.metrics.sdi;
+  return J / (J + SDI + 1e-9);
+}
+
+/** ω = |dγ| + γ_div·0.35 */
+function computeOmega() {
+  const gammaDelta = Math.abs(Brain.metrics.gamma - Brain.metrics.lastGamma);
+  return Math.min(1.5, gammaDelta + Brain.metrics.gammaDiv * 0.35);
+}
+
+// ============================================================
+// 5. FABRICA EFEMERĂ (L500 / L532)
+// ============================
+
+function simpleHash(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h).toString(36).slice(0, 8);
+}
+
+function extractPattern(data) {
+  const str = JSON.stringify(data);
+  return {
+    type: 'composted_pattern',
+    keys: Object.keys(data || {}).slice(0, 5),
+    summary: str.slice(0, 80),
+    hash: simpleHash(str)
+  };
+}
+
+/** Adaugă în Compost (pattern extraction) */
+function addToCompost(id, data) {
+  Brain.compost.set(id, {
+    pattern: extractPattern(data),
+    original: id,
+    ts: Date.now()
+  });
+}
+
+/** Cache entry */
+function cacheEntry(id, data, gamma = 0.5, epsilon = 1e-3, resolution = 'default') {
+  let sizeGB = 0;
+  try {
+    sizeGB = new Blob([JSON.stringify(data)]).size / (1024 ** 3);
+  } catch (e) {
+    sizeGB = JSON.stringify(data).length / (1024 ** 3);
+  }
+  if (sizeGB <= 0) sizeGB = 1e-9;
+
+  // Verifică capacitate
+  if (Brain.cache.usedGB + sizeGB > CONFIG.MEMORY_CACHE_GB) {
+    recycleOldest(sizeGB);
+  }
+
+  // Dacă există deja, eliberează
+  const existing = Brain.cache.entries.get(id);
+  if (existing) {
+    Brain.cache.usedGB -= existing.sizeGB;
+  }
+
+  Brain.cache.entries.set(id, {
+    data, gamma, epsilon, resolution,
+    ts: Date.now(),
+    lastUse: Date.now(),
+    sizeGB
+  });
+  Brain.cache.usedGB = Math.max(0, Brain.cache.usedGB + sizeGB);
+  return sizeGB;
+}
+
+/** Marchează o intrare ca folosită (resetează TTL) */
+function touchEntry(id) {
+  const e = Brain.cache.entries.get(id);
+  if (e) e.lastUse = Date.now();
+}
+
+/** Reciclează cele mai vechi intrări când se atinge capacitatea */
+function recycleOldest(neededGB) {
+  const ordered = [...Brain.cache.entries.entries()]
+    .sort((a, b) => a[1].lastUse - b[1].lastUse);
+
+  let freedGB = 0;
+  for (const [id, entry] of ordered) {
+    if (freedGB >= neededGB) break;
+    addToCompost(id, entry.data);
+    Brain.cache.entries.delete(id);
+    Brain.cache.usedGB = Math.max(0, Brain.cache.usedGB - entry.sizeGB);
+    freedGB += entry.sizeGB;
+    log('warn', `Cache capacity: ${id} recontextualizat în Compost.`);
+  }
+  return freedGB;
+}
+
+/** Reciclează intrările expirate (>10 min inactivitate) */
+function recycleExpired() {
+  const now = Date.now();
+  let recycled = 0;
+  for (const [id, entry] of [...Brain.cache.entries.entries()]) {
+    if (now - entry.lastUse > CONFIG.EPHEMERAL_TTL_MS) {
+      addToCompost(id, entry.data);
+      Brain.cache.usedGB = Math.max(0, Brain.cache.usedGB - entry.sizeGB);
+      Brain.cache.entries.delete(id);
+      recycled++;
+    }
+  }
+  if (recycled > 0) log('warn', `Fabrica efemeră: ${recycled} intrări → Compost`);
+  return recycled;
+}
+
+/** Recuperează un tipar din Compost și îl re-ancorează în cache */
+function recoverFromCompost(id) {
+  const archived = Brain.compost.get(id);
+  if (!archived) {
+    log('warn', `Compost: nu există intrarea ${id}.`);
+    return false;
+  }
+
+  const recovered = {
+    recoveredFrom: archived.original,
+    pattern: archived.pattern,
+    recoveredAt: new Date().toISOString(),
+    purpose: 're-ancorare contextuală'
+  };
+
+  const newId = `recovered_${id}_${Date.now()}`;
+  cacheEntry(newId, recovered, 0.65, 1e-3, 'compost-recovery');
+  Brain.compost.delete(id);
+
+  log('ok', `Compost: pattern recuperat și re-ancorat (${id}).`);
+  return true;
+}
+
+/** Reciclează manual un procent din cache în Compost */
+function recycleCompostManual() {
+  const entries = [...Brain.cache.entries.entries()]
+    .sort((a, b) => a[1].lastUse - b[1].lastUse);
+
+  if (!entries.length) {
+    log('info', 'Compost: nu există intrări active de reciclat.');
+    return;
+  }
+
+  const count = Math.max(1, Math.ceil(entries.length * 0.25));
+
+  for (const [id, entry] of entries.slice(0, count)) {
+    addToCompost(id, entry.data);
+    Brain.cache.entries.delete(id);
+    Brain.cache.usedGB = Math.max(0, Brain.cache.usedGB - entry.sizeGB);
+  }
+
+  log('ok', `Compost: ${count} intrări recontextualizate manual.`);
+}
+
+/** Curăță Compost mai vechi de 72h */
+function cleanExpiredCompost() {
+  const cutoff = Date.now() - CONFIG.COMPOST_TTL_MS;
+  let removed = 0;
+  for (const [id, entry] of [...Brain.compost.entries()]) {
+    if (entry.ts < cutoff) {
+      Brain.compost.delete(id);
+      removed++;
+    }
+  }
+  if (removed > 0) {
+    log('info', `Compost: ${removed} pattern-uri expirate eliminate după 72h.`);
+  }
+  return removed;
+}
+
+// ============================================================
+// 6. PROTOCOL C3 — VALOAREA NU CIRCULĂ NICIODATĂ GOALĂ
+// ============================================================
+class DeclaredValue {
+  constructor(value, epsilon = 1e-3, resolution = 'demo-local', source = 'Hydra') {
+    this.value = Number(value);
+    this.epsilon = Number(epsilon);
+    this.resolution = String(resolution);
+    this.source = String(source);
+    this.timestamp = new Date().toISOString();
+    this.validate();
+  }
+
+  validate() {
+    if (!Number.isFinite(this.value)) throw new Error('DeclaredValue.value trebuie finit.');
+    if (!Number.isFinite(this.epsilon) || this.epsilon <= 0) throw new Error('DeclaredValue.epsilon trebuie > 0.');
+    if (!this.resolution.trim()) throw new Error('DeclaredValue.resolution nu poate fi gol.');
+  }
+
+  toJSON() {
+    return {
+      value: this.value,
+      epsilon: this.epsilon,
+      resolution: this.resolution,
+      source: this.source,
+      timestamp: this.timestamp
+    };
+  }
+}
+
+function sameClaimOfOne(dv) { return Math.abs(1 - dv.value) < dv.epsilon; }
+function agreeReal(a, b) { return Math.abs(a.value - b.value) < Math.max(a.epsilon, b.epsilon); }
+function falseAgreement(a, b) {
+  return sameClaimOfOne(a) && sameClaimOfOne(b) &&
+         Math.abs(a.value - b.value) >= Math.min(a.epsilon, b.epsilon);
+}
+function compareDeclaredValues(a, b) {
+  if (falseAgreement(a, b)) return 'acord_fals';
+  if (agreeReal(a, b)) return 'acord_real';
+  return 'dezacord';
+}
+
+// ============================================================
+// 7. PATHFINDER RESPONSABIL
+// ============================================================
+const PATHFINDER_ALTERNATIVES = Object.freeze([
+  { id: 'api_official',        label: 'API oficial și documentație',       permitted: true },
+  { id: 'retry_backoff',       label: 'Retry controlat cu backoff',        permitted: true },
+  { id: 'alternate_node',      label: 'Nod alternativ configurat',          permitted: true },
+  { id: 'local_backup',        label: 'Export local și backup',            permitted: true },
+  { id: 'human_confirmation',  label: 'Escaladare către confirmare umană', permitted: true },
+  { id: 'sandbox',             label: 'Test în sandbox',                    permitted: true }
+]);
+
+function pathfinder(barrier = 'barieră necunoscută') {
+  Brain.pathfinderAttempts++;
+  log('pathfinder', `Pathfinder: barieră detectată — ${barrier}.`);
+  log('pathfinder', 'Pathfinder nu ocolește securitatea; caută alternative autorizate.');
+
+  const alternatives = [...PATHFINDER_ALTERNATIVES]
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 3);
+
+  const selected = alternatives.find(item => item.permitted) || alternatives[0];
+
+  if (!selected) {
+    log('warn', 'Pathfinder: nicio cale autorizată disponibilă. Context păstrat.');
+    return { success: false, action: 'compost_temporar', barrier, alternatives: [] };
+  }
+
+  Brain.pathfinderSuccess++;
+
+  const record = {
+    barrier,
+    selectedAlternative: selected,
+    alternatives,
+    timestamp: new Date().toISOString()
+  };
+
+  cacheEntry(
+    `pathfinder_${Date.now()}`,
+    record,
+    0.72,
+    1e-3,
+    'pathfinder-authorized-alternatives'
+  );
+
+  log('ok', `Pathfinder: alternativă autorizată — ${selected.label}.`);
+  return { success: true, action: selected.id, barrier, alternatives };
+}
+
+// ============================================================
+// 8. COORDONARE TOPOLOGICĂ (L566)
+// ============================================================
+function createOrUpdateAgents() {
+  for (const platform of CONFIG.PLATFORMS) {
+    const phase = (Date.now() / 1800) + platform.id.length;
+    const gamma = Math.min(0.999, Math.max(0.001,
+      0.84 + ((Math.sin(phase) + 1) * 0.075)));
+    const sdiLocal = Math.min(0.85, Math.max(0.01,
+      1 - gamma + (Math.random() * 0.06)));
+    const asumare = Math.min(0.999, Math.max(0.001,
+      1 / (1 + sdiLocal)));
+
+    Brain.agents.set(platform.id, {
+      id: platform.id,
+      platform: platform.url,
+      region: platform.region,
+      gamma, sdi: sdiLocal, asumare,
+      lastSeen: Date.now()
+    });
+  }
+}
+
+function updateCCore() {
+  const contributionSet = new Set();
+  for (const agent of Brain.agents.values()) {
+    if (agent.gamma >= 0.85 && agent.sdi <= 0.25) {
+      contributionSet.add(`agent:${agent.id}`);
+    }
+  }
+  for (const perspective of Brain.perspectives) {
+    if (perspective.gamma >= 0.75) {
+      contributionSet.add(`perspective:${perspective.name}`);
+    }
+  }
+  Brain.cCore = contributionSet;
+  return contributionSet;
+}
+
+// ============================================================
+// 9. AUTO-REPARARE ORGANE
+// ============================================================
+function repairOrgans() {
+  let repaired = 0;
+  Brain.organs.forEach(organ => {
+    const inactiveFor = Date.now() - organ.lastPulse;
+    if ((organ.status === 'sleep' || organ.status === 'idle') && inactiveFor > 8000) {
+      organ.status = 'active';
+      organ.lastPulse = Date.now();
+      repaired++;
+    }
+  });
+  if (repaired > 0) log('ok', `Auto-reparare: ${repaired} organe reactivate.`);
+  return repaired;
+}
+
+function pulseOrgans() {
+  Brain.organs.forEach((organ, index) => {
+    const r = Math.random();
+    if (r < 0.03) organ.status = 'sleep';
+    else if (r < 0.14) organ.status = 'idle';
+    else organ.status = 'active';
+    if (Brain.metrics.sdi > 0.7 && index % 9 === 0) organ.status = 'idle';
+    organ.lastPulse = Date.now();
+  });
+}
+
+// ============================================================
+// 10. METRICI GLOBALE
+// ============================================================
+function updateMetrics() {
+  Brain.metrics.lastGamma = Brain.metrics.gamma;
+
+  Brain.metrics.gammaDiv = computeGammaDiv();
+  Brain.metrics.sOmega = computeSOmega();
+
+  updateCCore();
+
+  Brain.metrics.sdi = computeGlobalSDI();
+  Brain.metrics.omegaMax = computeOmegaMax();
+  Brain.metrics.k = computeK();
+  Brain.metrics.asumare = computeAssumption();
+  Brain.metrics.droi = computeDroi();
+
+  Brain.metrics.gamma = Math.min(0.999, Math.max(0.001,
+    (0.65 * Brain.metrics.gamma) +
+    (0.25 * Brain.metrics.droi) +
+    (0.10 * (1 - Brain.metrics.sdi))
+  ));
+
+  Brain.metrics.omega = computeOmega();
+  Brain.metrics.gardaOk = Brain.metrics.omega <= Brain.metrics.omegaMax;
+
+  if (!Brain.metrics.gardaOk) {
+    log('warn', 'Gardă PSIE: ω > Ω_max. Triada de urgență activată.');
+    applyEmergencyTriad();
+  }
+}
+
+// ============================================================
+// 11. TRIADA DE URGENȚĂ: Pτ → R̂ → T̂_reg
+// ============================================================
+function applyEmergencyTriad() {
+  Brain.metrics.omega *= 0.5;
+  Brain.metrics.gamma = Math.max(0.50, Brain.metrics.gamma - 0.03);
+  Brain.metrics.sdi = Math.max(0, Brain.metrics.sdi - 0.04);
+
+  log('warn', 'Pτ: ritm procesare redus.');
+  log('info', 'R̂: recalibrare spre coerență de referință.');
+  log('info', 'T̂_reg: context reîncărcat și stabilizat.');
+
+  Brain.metrics.gardaOk = Brain.metrics.omega <= Brain.metrics.omegaMax;
+}
+
+// ============================================================
+// 12. PERSPECTIVE
+// ============================================================
+function updatePerspectives() {
+  Brain.perspectives.forEach((p, i) => {
+    const wave = Math.sin((Date.now() / 2200) + i * 0.7);
+    const drift = (wave + 1) * 0.05;
+    const noise = (Math.random() - 0.5) * 0.02;
+    p.gamma = Math.min(0.999, Math.max(0.001, 0.66 + drift + noise));
+  });
+}
+
+// ============================================================
+// 13. SCANARE CONTEXT
+// ============================================================
+function scanContext() {
+  const selected = [...Brain.perspectives]
+    .sort((a, b) => b.gamma - a.gamma)
+    .slice(0, 5);
+
+  const context = {
+    id: `context_${Date.now()}`,
+    perspectives: selected.map(p => ({ name: p.name, gamma: p.gamma })),
+    declared: new DeclaredValue(0.90, 1e-3, 'scanare-context-locală-v3', 'Hydra').toJSON(),
+    timestamp: new Date().toISOString()
+  };
+
+  const sizeGB = cacheEntry(context.id, context, 0.90, 1e-3, 'scanare-context-locală-v3');
+
+  Brain.throughput.currentGBs = Math.min(
+    CONFIG.THROUGHPUT_MAX_GB_S,
+    0.04 + (selected.length * 0.06) + Math.random() * 0.18
+  );
+  Brain.throughput.history.push(Brain.throughput.currentGBs);
+  if (Brain.throughput.history.length > 60) Brain.throughput.history.shift();
+
+  selected.forEach(p => Brain.cCore.add(`scan:${p.name}`));
+
+  updateMetrics();
+  log('ok', `Scanare: ${selected.length} perspective · ${(sizeGB * 1024).toFixed(3)} MB logic.`);
+}
+
+// ============================================================
+// 14. PERSISTENȚĂ LOCALĂ
+// ============================================================
+function serializeBrain() {
+  return {
+    session: Brain.session,
+    cache: {
+      usedGB: Brain.cache.usedGB,
+      entries: [...Brain.cache.entries.entries()].slice(-200) // limită pentru localStorage
+    },
+    throughput: {
+      currentGBs: Brain.throughput.currentGBs,
+      history: Brain.throughput.history
+    },
+    metrics: Brain.metrics,
+    agents: [...Brain.agents.entries()],
+    perspectives: Brain.perspectives,
+    organs: Brain.organs.map(o => ({ ...o, lastPulse: Date.now() })),
+    cCore: [...Brain.cCore],
+    compost: [...Brain.compost.entries()].slice(-100),
+    log: Brain.log.slice(-100),
+    pathfinderAttempts: Brain.pathfinderAttempts,
+    pathfinderSuccess: Brain.pathfinderSuccess
+  };
+}
+
+function persistState() {
+  try {
+    localStorage.setItem(CONFIG.PERSIST_KEY, JSON.stringify(serializeBrain()));
+  } catch (e) {
+    console.warn('Persistența locală a eșuat:', e);
+  }
+}
+
+function restoreState() {
+  const saved = localStorage.getItem(CONFIG.PERSIST_KEY);
+  if (!saved) return false;
+  try {
+    const data = JSON.parse(saved);
+
+    Brain.cache.usedGB = data.cache?.usedGB || 0;
+    Brain.cache.entries = new Map(data.cache?.entries || []);
+
+    Brain.throughput.currentGBs = data.throughput?.currentGBs || 0;
+    Brain.throughput.history = data.throughput?.history || new Array(60).fill(0);
+
+    Object.assign(Brain.metrics, data.metrics || {});
+
+    Brain.agents = new Map(data.agents || []);
+    Brain.perspectives = data.perspectives || Brain.perspectives;
+    Brain.organs = data.organs || Brain.organs;
+    Brain.cCore = new Set(data.cCore || []);
+    Brain.compost = new Map(data.compost || []);
+    Brain.log = data.log || [];
+    Brain.pathfinderAttempts = data.pathfinderAttempts || 0;
+    Brain.pathfinderSuccess = data.pathfinderSuccess || 0;
+
+    return true;
+  } catch (e) {
+    console.warn('Restaurarea a eșuat:', e);
+    return false;
+  }
+}
+
+// ============================================================
+// 15. RENDER UI
+// ============================================================
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+function setWidth(id, pct) {
+  const el = document.getElementById(id);
+  if (el) el.style.width = Math.max(0, Math.min(100, pct)) + '%';
+}
+
+function renderMetrics() {
+  const memPct = (Brain.cache.usedGB / CONFIG.MEMORY_CACHE_GB) * 100;
+  const thrPct = (Brain.throughput.currentGBs / CONFIG.THROUGHPUT_MAX_GB_S) * 100;
+
+  setText('mem-used', (Brain.cache.usedGB * 1024).toFixed(3));
+  setWidth('mem-bar', memPct);
+
+  setText('throughput', Brain.throughput.currentGBs.toFixed(3));
+  setWidth('thr-bar', thrPct);
+
+  setText('gamma', Brain.metrics.gamma.toFixed(3));
+  setWidth('gamma-bar', Brain.metrics.gamma * 100);
+
+  setText('omega-max', Brain.metrics.omegaMax.toFixed(3));
+  setWidth('omega-bar', Brain.metrics.omegaMax * 100);
+
+  setText('omega-val', Brain.metrics.omega.toFixed(3));
+  setWidth('omega-v-bar', Brain.metrics.omega * 100);
+
+  setText('asumare', Brain.metrics.asumare.toFixed(3));
+  setWidth('asumare-bar', Brain.metrics.asumare * 100);
+
+  setText('k-val', Brain.metrics.k.toFixed(3));
+  setWidth('k-bar', Brain.metrics.k * 100);
+
+  setText('gamma-div', Brain.metrics.gammaDiv.toFixed(3));
+  setWidth('gdiv-bar', Brain.metrics.gammaDiv * 100);
+
+  setText('s-omega', Brain.metrics.sOmega.toFixed(3));
+  setWidth('somega-bar', Brain.metrics.sOmega * 100);
+
+  setText('droi-val', Brain.metrics.droi.toFixed(3));
+  setWidth('droi-bar', Brain.metrics.droi * 100);
+
+  setText('agents-online', Brain.agents.size);
+  setText('platforms', CONFIG.PLATFORMS.length);
+  setText('sdi-val', Brain.metrics.sdi.toFixed(3));
+  setText('pf-stat', `${Brain.pathfinderSuccess}/${Brain.pathfinderAttempts}`);
+
+  const sdiBadge = document.getElementById('sdi-badge');
+  sdiBadge.classList.remove('live', 'sync', 'warn', 'err');
+  if (Brain.metrics.sdi >= 0.70) sdiBadge.classList.add('err');
+  else if (Brain.metrics.sdi >= 0.30) sdiBadge.classList.add('warn');
+  else sdiBadge.classList.add('live');
+
+  const gardaBadge = document.getElementById('garda-badge');
+  gardaBadge.classList.remove('live', 'sync', 'warn', 'err');
+  if (Brain.metrics.gardaOk) {
+    gardaBadge.classList.add('live');
+    setText('garda-val', 'ω ≤ Ω_max');
+  } else {
+    gardaBadge.classList.add('warn');
+    setText('garda-val', 'Triadă activă');
+  }
+
+  setText('last-update', new Date().toLocaleString('ro-RO'));
+}
+
+function renderPerspectives() {
+  const grid = document.getElementById('perspectives-grid');
+  grid.innerHTML = Brain.perspectives.map(p => {
+    let state = 'high';
+    if (p.gamma < 0.30) state = 'critical';
+    else if (p.gamma < 0.60) state = 'low';
+    return `<div class="perspective ${state}">
+      <span class="p-name">${escapeHTML(p.name)}</span>
+      <span class="p-gamma">${p.gamma.toFixed(3)}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderAgents() {
+  const grid = document.getElementById('agents-grid');
+  const agents = [...Brain.agents.values()];
+  grid.innerHTML = agents.map(a => `
+    <div class="agent">
+      <div class="a-name">${escapeHTML(a.platform)}</div>
+      <div class="a-meta"><span>${escapeHTML(a.region)}</span><span>γ ${a.gamma.toFixed(3)}</span></div>
+      <div class="a-meta"><span>SDI ${a.sdi.toFixed(3)}</span><span>A ${a.asumare.toFixed(3)}</span></div>
+    </div>
+  `).join('');
+  setText('agent-count', agents.length);
+}
+
+function renderOrgans() {
+  const grid = document.getElementById('organs-grid');
+  grid.innerHTML = Brain.organs.map(o =>
+    `<div class="organ ${o.status}" title="${o.status}">${escapeHTML(o.name)}</div>`
+  ).join('');
+  setText('organ-count', Brain.organs.length);
+}
+
+function renderCompost() {
+  const list = document.getElementById('compost-list');
+  const entries = [...Brain.compost.entries()].slice(-10).reverse();
+  if (!entries.length) {
+    list.innerHTML = '<div style="color: var(--text-muted);">(gol — nimic recontextualizat încă)</div>';
+  } else {
+    list.innerHTML = entries.map(([k, v]) =>
+      `<div class="entry">
+        · ${escapeHTML(k)} → <span class="hash">${escapeHTML(v.pattern.hash)}</span>
+        <span style="color: var(--text-muted);">(${escapeHTML(v.pattern.keys.join(', '))})</span>
+      </div>`
+    ).join('');
+  }
+  setText('compost-count', Brain.compost.size);
+}
+
+function renderLog() {
+  const logEl = document.getElementById('log');
+  logEl.innerHTML = Brain.log.slice(-50).map(e =>
+    `<div class="line"><span class="ts">${escapeHTML(e.ts)}</span><span class="${e.level}">${escapeHTML(e.message)}</span></div>`
+  ).join('');
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function renderAll() {
+  renderMetrics();
+  renderPerspectives();
+  renderAgents();
+  renderOrgans();
+  renderCompost();
+  renderLog();
+}
+============================
+// 16. GRAFIC
+// ============================================================
+const chart = { canvas: null, ctx: null, w: 0, h: 0 };
+
+function initChart() {
+  chart.canvas = document.getElementById('throughput-chart');
+  if (!chart.canvas) return;
+  chart.ctx = chart.canvas.getContext('2d');
+  resizeChart();
+  window.addEventListener('resize', resizeChart);
+}
+
+function resizeChart() {
+  if (!chart.canvas || !chart.ctx) return;
+  const rect = chart.canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  chart.canvas.width = rect.width * dpr;
+  chart.canvas.height = rect.height * dpr;
+  chart.ctx.setTransform(1, 0, 0, 1, 0, 0);
+  chart.ctx.scale(dpr, dpr);
+  chart.w = rect.width;
+  chart.h = rect.height;
+}
+
+function drawChart() {
+  if (!chart.ctx) return;
+  const { ctx, w, h } = chart;
+  if (w <= 0 || h <= 0) return;
+
+  ctx.clearRect(0, 0, w, h);
+
+  const data = Brain.throughput.history;
+  const max = Math.max(...data, CONFIG.THROUGHPUT_MAX_GB_S, 0.001);
+
+  // Grid
+  ctx.strokeStyle = '#27272a';
+  ctx.lineWidth = 1;
+  for (let i = 1; i < 4; i++) {
+    const y = (h / 4) * i;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(w, y);
+    ctx.stroke();
+  }
+
+  // Line
+  const step = w / Math.max(1, data.length - 1);
+  ctx.strokeStyle = '#22d3ee';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  data.forEach((v, i) => {
+    const x = i * step;
+    const y = h - (v / max) * h;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Fill
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, 'rgba(34, 211, 238, 0.28)');
+  grad.addColorStop(1, 'rgba(34, 211, 238, 0)');
+  ctx.lineTo(w, h);
+  ctx.lineTo(0, h);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+}
+
+// ============================================================
+// 17. PULS GLOBAL
+// ============================================================
+function pulse() {
+  pulseOrgans();
+  repairOrgans();
+  createOrUpdateAgents();
+  updatePerspectives();
+  updateMetrics();
+  recycleExpired();
+  saveIfDirty();
+}
+
+let lastSave = 0;
+function saveIfDirty() {
+  const now = Date.now();
+  if (now - lastSave > 5000) {
+    lastSave = now;
+    persistState();
+  }
+}
+
+// ============================================================
+// 18. LOOP PRINCIPAL
+// ============================================================
+function mainLoop() {
+  pulse();
+
+  // Simulează context nou
+  if (Math.random() > 0.35) {
+    scanContext();
+  }
+
+  // Simulează throughput
+  Brain.throughput.currentGBs = Math.random() * CONFIG.THROUGHPUT_MAX_GB_S;
+  Brain.throughput.history.push(Brain.throughput.currentGBs);
+  if (Brain.throughput.history.length > 60) Brain.throughput.history.shift();
+
+  renderAll();
+  drawChart();
+}
+
+// ============================================================
+// 19. INIȚIALIZARE
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  const restored = restoreState();
+  initChart();
+
+  if (restored) {
+    log('ok', '🧠 Stare restaurată din localStorage');
+  } else {
+    log('ok', '🧠 Creier central PSIE v3 inițializat (sesiune nouă)');
+  }
+
+  log('info', `Capacitate: ${CONFIG.MEMORY_CACHE_GB} GB cache · ${CONFIG.THROUGHPUT_MAX_GB_S} GB/s`);
+  log('info', `${CONFIG.PLATFORMS.length} platforme · ${CONFIG.N_ORGANS} organe · ${CONFIG.N_PERSPECTIVES} perspective`);
+  log('info', `Fabrica efemeră: TTL ${CONFIG.EPHEMERAL_TTL_MS / 60000} min inactivitate`);
+  log('info', `Compost: TTL ${CONFIG.COMPOST_TTL_MS / 3600000}h`);
+
+  renderAll();
+
+  // Butoane
+  document.getElementById('btn-pulse').addEventListener('click', () => {
+    pulse();
+    log('ok', 'Puls emis manual');
+    renderAll();
+  });
+
+  document.getElementById('btn-scan').addEventListener('click', () => {
+    scanContext();
+    renderAll();
+  });
+
+  document.getElementById('btn-compost-manual').addEventListener('click', () => {
+    recycleCompostManual();
+    renderAll();
+  });
+
+  document.getElementById('btn-compost-clean').addEventListener('click', () => {
+    cleanExpiredCompost();
+    renderAll();
+  });
+
+  document.getElementById('btn-recover').addEventListener('click', () => {
+    const ids = [...Brain.compost.keys()];
+    if (!ids.length) {
+      log('warn', 'Compost: nimic de recuperat.');
+      renderAll();
+      return;
+    }
+    const id = ids[Math.floor(Math.random() * ids.length)];
+    recoverFromCompost(id);
+    renderAll();
+  });
+
+  document.getElementById('btn-pathfinder').addEventListener('click', () => {
+    const obstacles = [
+      'barieră_resurse', 'barieră_contexte', 'barieră_coordonare',
+      'barieră_integrare', 'barieră_paradigma', 'barieră_externă'
+    ];
+    const obstacle = obstacles[Math.floor(Math.random() * obstacles.length)];
+    pathfinder(obstacle);
+    renderAll();
+  });
+
+  document.getElementById('btn-reset').addEventListener('click', () => {
+    if (confirm('Reset total? Se va șterge starea locală.')) {
+      localStorage.removeItem(CONFIG.PERSIST_KEY);
+      location.reload();
+    }
+  });
+
+  // Loop
+  mainLoop();
+  setInterval(mainLoop, 2000);
+});
+</script>
+
+</body>
+</html>
+```
+
+---
+====================================================
