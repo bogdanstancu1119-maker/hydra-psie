@@ -1,0 +1,13 @@
+## Formule PSIE implementate
+
+| Formulă | Modul | Descriere |
+|---------|-------|-----------|
+| M9 | metrics.js | γ_div = 4·Var(γ) |
+| M10 | metrics.js | S_Ω = H(p)/log(n) |
+| M14 | metrics.js | Ω_max = 3 factori |
+| L490 | metrics.js | K(t) = K_0(1-e^(-αC)) |
+| L566 | metrics.js | D_roi = Σ(w·γ)/Σw |
+| L500 | compost.js | Arhiva Compost |
+| L532 | compost.js | Distilare pattern |
+| L527 | c3.js | Meta-aplicație |
+| Protocol C3 | c3.js | (v, ε, R) |
